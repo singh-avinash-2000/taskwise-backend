@@ -1,8 +1,8 @@
 const JWT = require('jsonwebtoken');
 
-const generate = (user) =>
+const generate = (payload) =>
 {
-	return JWT.sign({ user }, process.env.JWT_SECRET);
+	return JWT.sign({ user: payload }, process.env.JWT_SECRET);
 };
 
 const validate = (token) =>

@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const JWT = require("@configs/jwt");
 const User = require("@models/user");
+const Project = require("@models/project");
 
 exports.login = asyncHandler(async (req, res) =>
 {
@@ -9,8 +10,6 @@ exports.login = asyncHandler(async (req, res) =>
 	const { email, password } = req.body;
 
 	const user = await User.findOne({ email: email.trim() });
-
-	console.log(user);
 
 	if (!user)
 	{
@@ -22,7 +21,9 @@ exports.login = asyncHandler(async (req, res) =>
 
 	if (user.authenticate(password))
 	{
-		const token = JWT.generate(user);
+		const token = JWT.generate({
+			_id: user._id
+		});
 
 		responseObject.message = "Successfully logged in";
 		responseObject.result = { token };
@@ -56,7 +57,10 @@ exports.register = asyncHandler(async (req, res) =>
 
 	responseObject.message = "You have successfully registered!";
 
-	const token = JWT.generate(result);
+	const token = JWT.generate({
+		_id: result._id
+	});
+
 	responseObject.result = { token };
 
 	return res.success(responseObject);

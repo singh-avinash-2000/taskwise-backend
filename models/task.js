@@ -7,10 +7,13 @@ const taskSchema = Schema(
 			type: String,
 			enum: ["MAIN_TASK", "SUB_TASK"]
 		},
+		project: {
+			type: Schema.Types.ObjectId,
+			ref: "projects"
+		},
 		task_key: {
-			type: String,
-			trim: true,
-			required: true
+			type: Number,
+			required: true,
 		},
 		summary: {
 			type: String,
@@ -25,11 +28,11 @@ const taskSchema = Schema(
 			enum: ["LOW", "MEDIUM", "HIGH", "URGENT"]
 		},
 		assignee: {
-			type: Schema.types.ObjectId,
+			type: Schema.Types.ObjectId,
 			ref: "users"
 		},
 		reporter: {
-			type: Schema.types.ObjectId,
+			type: Schema.Types.ObjectId,
 			ref: "users"
 		},
 		documents: [

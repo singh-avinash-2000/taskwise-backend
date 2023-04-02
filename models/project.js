@@ -1,11 +1,33 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
+function pickRandomLetters(sentence)
+{
+	const letters = sentence.replace(/\s+/g, '');
+	let result = '';
+	for (let i = 0; i < 2; i++)
+	{
+		const randomIndex = Math.floor(Math.random() * letters.length);
+		result += letters.charAt(randomIndex);
+	}
+	return result;
+}
+
 const projectSchema = Schema(
 	{
 		name: {
 			type: String,
-			trim: true
+			trim: true,
+			set: function (value)
+			{
+				if (this.isNew)
+				{
+					let key = value[0] + pickRandomLetters(value.substr(1)).toUpperCase();
+					this.key = key;
+				}
+
+				return value;
+			}
 		},
 		description: {
 			type: String,
@@ -26,8 +48,8 @@ const projectSchema = Schema(
 		},
 		members: [
 			{
-				user_id: {
-					type: Schema.types.ObjectId,
+				user: {
+					type: Schema.Types.ObjectId,
 					ref: 'users'
 				},
 				role: {
@@ -37,6 +59,10 @@ const projectSchema = Schema(
 				}
 			}
 		],
+		key: {
+			type: String,
+			required: true,
+		},
 		status: {
 			type: String,
 			enum: ["ACTIVE", "DELETED"],
