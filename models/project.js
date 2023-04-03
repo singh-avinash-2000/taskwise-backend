@@ -56,6 +56,11 @@ const projectSchema = Schema(
 					type: String,
 					enum: ["ADMIN", "OWNER", "READ", "WRITE"],
 					default: "READ"
+				},
+				status: {
+					type: String,
+					enum: ["PENDING", "ACCEPTED", "REMOVED", "REJECTED"],
+					default: "PENDING"
 				}
 			}
 		],
