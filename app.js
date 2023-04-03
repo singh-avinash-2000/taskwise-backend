@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv").config();
 const helmet = require("helmet");
 const morgan = require("morgan");
+const cookieParser = require('cookie-parser');
 const { responseMiddleware } = require("@middlewares/response.middleware");
 const { errorHandler } = require("@middlewares/error.middleware");
 const { authenticateRequest } = require("@middlewares/authentication.middleware");
@@ -18,14 +19,23 @@ const initApp = async (connectDB) =>
 		const app = express();
 
 		app.use(helmet());
-		app.use(cors());
+		app.use(cookieParser());
+
+		//For CORS
+		let origin = 'http://localhost:3000';
+		if (process.env.NODE_ENV === 'production')
+		{
+			origin = process.env.CORS_ORIGIN;
+		}
+		app.use(cors({
+			origin,
+			credentials: true
+		}));
 
 		app.use((req, res, next) =>
 		{
-			res.setHeader("Access-Control-Allow-Origin", "*");
 			res.setHeader("Access-Control-Allow-Methods", "*");
 			res.setHeader("Access-Control-Allow-Headers", "*");
-
 			next();
 		});
 

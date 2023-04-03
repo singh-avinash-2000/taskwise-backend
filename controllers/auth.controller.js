@@ -3,6 +3,7 @@ const JWT = require("@configs/jwt");
 const User = require("@models/user");
 const Project = require("@models/project");
 
+// Logs in the user
 exports.login = asyncHandler(async (req, res) =>
 {
 	let responseObject = {};
@@ -21,12 +22,24 @@ exports.login = asyncHandler(async (req, res) =>
 
 	if (user.authenticate(password))
 	{
-		const token = JWT.generate({
+		// Generating access token here
+		const accessToken = JWT.generate({
 			_id: user._id
-		});
+		}, "15s"); //generated accessToken with 1 day expiration time
+
+		// Generating refresh token here
+		const refreshToken = JWT.generate({
+			_id: user._id
+		}, "1d");	// generated refreshToken with 1 year expiration time
+
+		//Added refresh token to cookie
+		res.cookie('jwt', refreshToken, {
+			httpOnly: true,
+			secure: true,
+		},);
 
 		responseObject.message = "Successfully logged in";
-		responseObject.result = { token };
+		responseObject.result = { accessToken };
 
 		return res.success(responseObject);
 	}
@@ -38,6 +51,7 @@ exports.login = asyncHandler(async (req, res) =>
 	}
 });
 
+// Registers a new user
 exports.register = asyncHandler(async (req, res) =>
 {
 	let responseObject = {};
@@ -57,15 +71,39 @@ exports.register = asyncHandler(async (req, res) =>
 
 	responseObject.message = "You have successfully registered!";
 
-	const token = JWT.generate({
+	const accessToken = JWT.generate({
 		_id: result._id
+	}, "1d"); //generated accessToken with 1 day expiration time
+
+	const refreshToken = JWT.generate({
+		_id: result._id
+	}, "1y");	// generated refreshToken with 1 year expiration time
+
+	//Added refresh token to cookie
+	res.cookie('jwt', refreshToken, {
+		httpOnly: true,
+		secure: true,
 	});
 
-	responseObject.result = { token };
+	responseObject.result = { accessToken };
 
 	return res.success(responseObject);
 });
 
+
+//Logs out the user by clearing the cookie
+exports.logout = asyncHandler(async (req, res) =>
+{
+	let responseObject = {};
+	res.clearCookie('jwt', {
+		httpOnly: true,
+		secure: true,
+	});
+	responseObject.message = "Successfully logged out";
+	return res.success(responseObject);
+});
+
+//Checks if the user is already registered
 exports.checkValidDisplayName = asyncHandler(async (req, res) => 
 {
 	let responseObject = {};
@@ -83,4 +121,43 @@ exports.checkValidDisplayName = asyncHandler(async (req, res) =>
 
 	responseObject.message = "Valid display name";
 	return res.success(responseObject);
+});
+
+//Refresh Access Token after Access Token expires
+exports.refreshAccessToken = asyncHandler(async (req, res) =>
+{
+	let responseObject = {};
+
+	const { jwt } = req.cookies;
+
+	if (jwt)
+	{
+		const decoded = JWT.validate(jwt);
+
+		if (decoded)
+		{
+			const accessToken = JWT.generate({
+				_id: decoded._id
+			}, "1d"); //generated accessToken with 1 day expiration time
+
+			responseObject.message = "Successfully refreshed access token";
+			responseObject.result = { accessToken };
+
+			return res.success(responseObject);
+		}
+		else
+		{
+			responseObject.code = 401;
+			responseObject.message = "Invalid refresh token";
+
+			return res.error(responseObject);
+		}
+	}
+	else
+	{
+		responseObject.code = 401;
+		responseObject.message = "Invalid refresh token";
+
+		return res.error(responseObject);
+	}
 });

@@ -1,8 +1,16 @@
 exports.errorHandler = (err, req, res, next) =>
 {
-	const statusCode = 500;
+	let statusCode = 500;
 
 	console.log(err);
+
+	//only for jwt errors
+	if (err.message === 'jwt expired')
+	{
+		statusCode = 401;
+	}
+
+
 	res.status(statusCode);
 	res.json(
 		{

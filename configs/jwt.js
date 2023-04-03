@@ -1,8 +1,11 @@
 const JWT = require('jsonwebtoken');
 
-const generate = (payload) =>
+// added exipresIn parameter in generate function
+const generate = (payload, time) =>
 {
-	return JWT.sign({ user: payload }, process.env.JWT_SECRET);
+	return JWT.sign({ user: payload }, process.env.JWT_SECRET, {
+		expiresIn: time || '1h'
+	});
 };
 
 const validate = (token) =>
