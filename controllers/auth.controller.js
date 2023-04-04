@@ -133,12 +133,11 @@ exports.refreshAccessToken = asyncHandler(async (req, res) =>
 	if (jwt)
 	{
 		const decoded = JWT.validate(jwt);
-
 		if (decoded)
 		{
 			const accessToken = JWT.generate({
-				_id: decoded._id
-			}, "15m"); //generated accessToken with 1 day expiration time
+				_id: decoded.user._id
+			}, "15m"); //generated accessToken with 15 min expiration time
 
 			responseObject.message = "Successfully refreshed access token";
 			responseObject.result = { accessToken };

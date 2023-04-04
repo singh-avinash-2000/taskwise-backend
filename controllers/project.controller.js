@@ -48,7 +48,7 @@ exports.createNewProject = asyncHandler(async (req, res) =>
 
 	await Project.create(body);
 
-	responseObject.message = "Successfully add a new project";
+	responseObject.message = "Successfully added a new project";
 	return res.success(responseObject);
 });
 
