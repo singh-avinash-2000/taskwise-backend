@@ -25,12 +25,12 @@ exports.login = asyncHandler(async (req, res) =>
 		// Generating access token here
 		const accessToken = JWT.generate({
 			_id: user._id
-		}, "15s"); //generated accessToken with 1 day expiration time
+		}, "15m"); //generated accessToken with 15 min expiration time
 
 		// Generating refresh token here
 		const refreshToken = JWT.generate({
 			_id: user._id
-		}, "1d");	// generated refreshToken with 1 year expiration time
+		}, "8h");	// generated refreshToken with 8 hour expiration time
 
 		//Added refresh token to cookie
 		res.cookie('jwt', refreshToken, {
@@ -73,11 +73,11 @@ exports.register = asyncHandler(async (req, res) =>
 
 	const accessToken = JWT.generate({
 		_id: result._id
-	}, "1d"); //generated accessToken with 1 day expiration time
+	}, "15m"); //generated accessToken with 15 min expiration time
 
 	const refreshToken = JWT.generate({
 		_id: result._id
-	}, "1y");	// generated refreshToken with 1 year expiration time
+	}, "8h");	// generated refreshToken with 8 hour expiration time
 
 	//Added refresh token to cookie
 	res.cookie('jwt', refreshToken, {
@@ -138,7 +138,7 @@ exports.refreshAccessToken = asyncHandler(async (req, res) =>
 		{
 			const accessToken = JWT.generate({
 				_id: decoded._id
-			}, "1d"); //generated accessToken with 1 day expiration time
+			}, "15m"); //generated accessToken with 1 day expiration time
 
 			responseObject.message = "Successfully refreshed access token";
 			responseObject.result = { accessToken };
