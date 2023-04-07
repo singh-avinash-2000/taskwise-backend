@@ -4,7 +4,7 @@ const { login, register, logout, refreshAccessToken } = require("@controllers/au
 
 router.route(`/login`).post(login);
 router.route(`/register`).post(register);
-router.route(`/logout`).post(logout);
-router.get('/refresh', refreshAccessToken);
+router.route(`/logout`).get(logout);
+router.route('/refresh').get(refreshAccessToken);
 
 module.exports = router;

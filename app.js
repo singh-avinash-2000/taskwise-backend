@@ -8,7 +8,6 @@ const { responseMiddleware } = require("@middlewares/response.middleware");
 const { errorHandler } = require("@middlewares/error.middleware");
 const { authenticateRequest } = require("@middlewares/authentication.middleware");
 
-// const cloudinary = require("cloudinary").v2;
 
 const initApp = async (connectDB) =>
 {
@@ -51,12 +50,13 @@ const initApp = async (connectDB) =>
 		// });
 
 		app.use(responseMiddleware);
-		app.use(express.json());
+		app.use(express.json({ limit: '10mb' }));
 		app.use(express.urlencoded({ extended: false }));
 
 		app.use(`/api/auth`, require("@routes/auth.routes"));
 		app.use(authenticateRequest);
 		app.use(`/api/projects`, require("@routes/project.routes"));
+		app.use(`/api/misc`, require("@routes/misc.routes"));
 
 		app.use(errorHandler);
 

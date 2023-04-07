@@ -108,8 +108,9 @@ exports.fetchProjectMembers = asyncHandler(async (req, res) =>
 		"members.user": _id
 	}).populate({ path: "members.user", select: { "_id": 1, "first_name": 1, "last_name": 1, "display_name": 1 } });
 
+
 	responseObject.message = "Successfully fetched member details";
-	responseObject.result = record.members;
+	responseObject.result = { name: record.name, members: record.members };
 
 	return res.success(responseObject);
 });
@@ -161,3 +162,44 @@ exports.updateProjectMemberDetails = asyncHandler(async (req, res) =>
 
 	return res.success(responseObject);
 });
+
+exports.fetchSearchedProjects = asyncHandler(async (req, res) =>
+{
+	try
+	{
+		const { _id } = req.user;
+		const { searchQuery } = req.params;
+		const responseObject = {};
+
+		if (!searchQuery)
+		{
+			responseObject.message = "Please provide a search query";
+			return res.error(responseObject);
+		}
+		const regex = new RegExp(searchQuery, 'i');
+		const matchedProjects = await Project.find({ name: { $regex: regex }, members: { $elemMatch: { user: _id } } })
+			.populate({ path: 'members.user', match: { _id: _id }, select: 'display_name email' });
+
+		const mappedResults = matchedProjects.map(project =>
+		{
+			const _id = project._doc._id;
+			const name = project._doc.name;
+			const role = project._doc.members[0].role;
+			return {
+				_id,
+				name,
+				role
+			};
+		});
+		responseObject.message = "Successfully fetched searched projects";
+		responseObject.result = mappedResults;
+		return res.success(responseObject);
+	} catch (error)
+	{
+		console.log(error);
+		return res.error(error);
+	}
+
+});
+
+
