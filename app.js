@@ -1,13 +1,17 @@
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv").config();
+const { createServer } = require("http");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require('cookie-parser');
 const { responseMiddleware } = require("@middlewares/response.middleware");
 const { errorHandler } = require("@middlewares/error.middleware");
 const { authenticateRequest } = require("@middlewares/authentication.middleware");
+const { Server } = require("socket.io");
+const { registerSocketEvents } = require("@controllers/socket.controller");
 
+var SocketUsers = {};
 
 const initApp = async (connectDB) =>
 {
@@ -16,6 +20,13 @@ const initApp = async (connectDB) =>
 		await connectDB();
 
 		const app = express();
+		const httpServer = createServer(app);
+		const io = new Server(httpServer, {
+			cors: {
+				origin: 'http://localhost:3000',
+				methods: "*",
+			}
+		});
 
 		app.use(helmet());
 		app.use(cookieParser());
@@ -26,6 +37,7 @@ const initApp = async (connectDB) =>
 		{
 			origin = process.env.CORS_ORIGIN;
 		}
+
 		app.use(cors({
 			origin,
 			credentials: true
@@ -40,15 +52,6 @@ const initApp = async (connectDB) =>
 
 		app.use(morgan('short'));
 
-		// cloudinary.config(
-		// {
-		//     api_key: process.env.CLOUDINARY_API_KEY,
-		//     api_secret: process.env.CLOUDINARY_API_SECRET,
-		//     secure: true,
-		//     use_filename: true,
-		//     unique_filename: true
-		// });
-
 		app.use(responseMiddleware);
 		app.use(express.json({ limit: '10mb' }));
 		app.use(express.urlencoded({ extended: false }));
@@ -62,7 +65,29 @@ const initApp = async (connectDB) =>
 
 		const port = process.env.PORT || 5000;
 
-		await app.listen(port);
+		io.on("connection", (socket) =>
+		{
+			console.log("someone-connected", socket.id);
+			socket.on("user-connected", data =>
+			{
+				SocketUsers[data] = socket.id;
+				console.log(SocketUsers);
+
+				socket.emit("add-to-project", {
+					message: "you have been invited to a new project",
+					count: Math.ceil(Math.random() * 10)
+				});
+			});
+
+			socket.on("disconnect", () =>
+			{
+				console.log(socket.id, "disconnected");
+			});
+
+			registerSocketEvents(socket);
+		});
+
+		await httpServer.listen(port);
 
 		console.log(`server started at -> http://localhost:${port}`);
 
