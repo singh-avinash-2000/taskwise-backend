@@ -8,7 +8,9 @@ const hasPermission = (asked_permission) =>
 		const { project_id } = req.params;
 		const responseObject = {};
 
-		if (asked_permission.includes(projects[project_id]))
+		const availablePermission = projects[project_id].role[0];
+
+		if (asked_permission.includes(availablePermission))
 		{
 			return next();
 		}
@@ -24,13 +26,13 @@ const hasPermission = (asked_permission) =>
 
 const attachProjectData = async (req, res, next) =>
 {
-	const projects = await Project.find({ "members.user": req.user._id }, { "_id": 1, "role": "$members.role" });
+	const projects = await Project.find({ "members.user": req.user._id }, { "_id": 1, "role": "$members.role", "key": 1 });
 
 	const formattedProjects = {};
 
 	projects.map(project =>
 	{
-		formattedProjects[project._doc._id] = project._doc.role[0];
+		formattedProjects[project._doc._id] = project._doc;
 	});
 
 	req.projects = formattedProjects;

@@ -6,11 +6,20 @@ exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 	const { _id } = req.user;
 	const responseObject = {};
 
+	const { searchQuery } = req.query;
+	const queryParameters = {
+		"members.user": _id,
+		status: "ACTIVE"
+	};
+
+	if (searchQuery)
+	{
+		const regex = new RegExp(searchQuery, 'i');
+		queryParameters.name = { $regex: regex };
+	}
+
 	const records = await Project.find(
-		{
-			"members.user": _id,
-			status: "ACTIVE"
-		},
+		queryParameters,
 		{
 			"_id": 1,
 			"name": 1,
@@ -42,9 +51,11 @@ exports.createNewProject = asyncHandler(async (req, res) =>
 		{
 			user: _id,
 			role: "OWNER",
-			status: "JOINED"
+			status: "ACCEPTED"
 		}
 	];
+
+	body.type = body.type.toUpperCase();
 
 	await Project.create(body);
 
@@ -74,6 +85,8 @@ exports.updateProjectDetails = asyncHandler(async (req, res) =>
 	const responseObject = {};
 
 	const payload = req.body;
+
+	payload.type = payload.type.toUpperCase();
 
 	await Project.findOneAndUpdate(
 		{ _id: project_id },
@@ -176,6 +189,7 @@ exports.fetchSearchedProjects = asyncHandler(async (req, res) =>
 			responseObject.message = "Please provide a search query";
 			return res.error(responseObject);
 		}
+
 		const regex = new RegExp(searchQuery, 'i');
 		const matchedProjects = await Project.find({ name: { $regex: regex }, members: { $elemMatch: { user: _id } } })
 			.populate({ path: 'members.user', match: { _id: _id }, select: 'display_name email' });
@@ -201,5 +215,3 @@ exports.fetchSearchedProjects = asyncHandler(async (req, res) =>
 	}
 
 });
-
-

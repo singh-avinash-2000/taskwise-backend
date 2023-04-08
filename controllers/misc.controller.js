@@ -1,5 +1,5 @@
 const asyncHandler = require("express-async-handler");
-const S3 = require("../configs/S3");
+const S3 = require("@configs/S3");
 const { DeleteObjectCommand, GetObjectCommand } = require("@aws-sdk/client-s3");
 
 
@@ -23,7 +23,7 @@ exports.deleteFile = asyncHandler(async (req, res) =>
 
 	const deleteResponse = await S3.send(new DeleteObjectCommand({
 		Bucket: process.env.AWS_BUCKET_NAME,
-		Key: req.user._id + filename,
+		Key: req.user._id + "_" + filename,
 	}));
 
 	responseObject.message = "Successfully deleted";
@@ -39,7 +39,7 @@ exports.getFile = asyncHandler(async (req, res) =>
 
 	const response = await S3.send(new GetObjectCommand({
 		Bucket: process.env.AWS_BUCKET_NAME,
-		Key: req.user._id + filename,
+		Key: req.user._id + "_" + filename,
 	}));
 
 	const stream = await response.Body.transformToByteArray();
@@ -48,4 +48,3 @@ exports.getFile = asyncHandler(async (req, res) =>
 	res.set('Content-Type', 'application/octet-stream');
 	res.send(Buffer.from(stream));
 });
-

@@ -12,8 +12,8 @@ const taskSchema = Schema(
 			ref: "projects"
 		},
 		task_key: {
-			type: Number,
-			required: true,
+			type: String,
+			required: true
 		},
 		summary: {
 			type: String,
@@ -27,24 +27,29 @@ const taskSchema = Schema(
 			type: String,
 			enum: ["LOW", "MEDIUM", "HIGH", "URGENT"]
 		},
-		assignee: {
-			type: Schema.Types.ObjectId,
-			ref: "users"
-		},
+		assignee: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: "users"
+			}
+		],
 		reporter: {
 			type: Schema.Types.ObjectId,
 			ref: "users"
 		},
 		documents: [
 			{
+				file_name: {
+					type: String
+				},
 				link: {
 					type: String
 				}
 			}
 		],
 		parent_task: {
-			type: String,
-			default: null
+			type: Schema.Types.ObjectId,
+			ref: "tasks"
 		},
 		status: {
 			type: String,
