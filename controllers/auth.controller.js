@@ -192,7 +192,7 @@ exports.forgotPassword = asyncHandler(async (req, res) =>
 
 	const resetToken = JWT.generate({
 		_id: userWithEmail._id
-	}, "1d"); //generated resetToken with 10 min expiration time
+	}, "10m"); //generated resetToken with 10 min expiration time
 
 	let origin = 'http://localhost:3000';
 	if (process.env.NODE_ENV === 'production')
