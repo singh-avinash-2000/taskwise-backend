@@ -2,6 +2,15 @@ const asyncHandler = require("express-async-handler");
 const JWT = require("@configs/jwt");
 const User = require("@models/user");
 const Project = require("@models/project");
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+	service: "gmail",
+	auth: {
+		user: process.env.EMAIL_ID,
+		pass: process.env.EMAIL_PASSWORD
+	}
+});
 
 // Logs in the user
 exports.login = asyncHandler(async (req, res) =>
@@ -159,4 +168,146 @@ exports.refreshAccessToken = asyncHandler(async (req, res) =>
 
 		return res.error(responseObject);
 	}
+});
+
+exports.forgotPassword = asyncHandler(async (req, res) =>
+{
+	let responseObject = {};
+
+	const { email } = req.body;
+	if (!email)
+	{
+		responseObject.code = 400;
+		responseObject.message = "Please enter your email address";
+		return res.error(responseObject);
+	}
+
+	const userWithEmail = await User.findOne({ email: email.trim() });
+	if (!userWithEmail)
+	{
+		responseObject.code = 404;
+		responseObject.message = "User not registered";
+		return res.error(responseObject);
+	}
+
+	const resetToken = JWT.generate({
+		_id: userWithEmail._id
+	}, "1d"); //generated resetToken with 10 min expiration time
+
+	let origin = 'http://localhost:3000';
+	if (process.env.NODE_ENV === 'production')
+	{
+		origin = process.env.CORS_ORIGIN;
+	}
+
+	const resetURL = `${origin}/resetPassword/${userWithEmail._id}/${resetToken}`;
+
+	const message = `Please reset your password using the given link.It will expire in 10 minutes.\n\n${resetURL}`;
+
+	const mailOptions = {
+		from: process.env.EMAIL_ID,
+		to: email,
+		subject: "Password Reset Link",
+		text: message
+	};
+
+	transporter.sendMail(mailOptions, (error, info) =>
+	{
+		if (error)
+		{
+			responseObject.code = 500;
+			responseObject.message = "Error sending email";
+			return res.error(responseObject);
+		}
+		else
+		{
+			responseObject.code = 200;
+			responseObject.message = "Email sent successfully";
+			return res.success(responseObject);
+		}
+	});
+
+});
+
+exports.validateResetPasswordToken = asyncHandler(async (req, res) =>
+{
+	const { userId, resetToken } = req.params;
+	let responseObject = {};
+
+	if (!userId || !resetToken)
+	{
+		responseObject.code = 400;
+		responseObject.message = "Invalid request";
+		return res.error(responseObject);
+	}
+
+	const decoded = JWT.validate(resetToken);
+	if (!decoded)
+	{
+		responseObject.code = 401;
+		responseObject.message = "Invalid reset token";
+		return res.error(responseObject);
+	}
+
+	if (decoded.user._id !== userId)
+	{
+		responseObject.code = 401;
+		responseObject.message = "Invalid reset token";
+		return res.error(responseObject);
+	}
+
+	responseObject.message = "Valid reset token";
+	return res.success(responseObject);
+});
+
+exports.resetPassword = asyncHandler(async (req, res) =>
+{
+	const { password } = req.body;
+	const { userId, resetToken } = req.body;
+	let responseObject = {};
+
+	if (!password)
+	{
+		responseObject.code = 400;
+		responseObject.message = "Password is required";
+		return res.error(responseObject);
+	}
+	if (!userId || !resetToken)
+	{
+		responseObject.code = 400;
+		responseObject.message = "Invalid request";
+		return res.error(responseObject);
+	}
+
+	const decoded = JWT.validate(resetToken);
+	if (!decoded)
+	{
+		responseObject.code = 400;
+		responseObject.message = "Invalid reset token";
+		return res.error(responseObject);
+	}
+
+	if (decoded.user._id !== userId)
+	{
+		responseObject.code = 400;
+		responseObject.message = "Invalid reset token";
+		return res.error(responseObject);
+	}
+
+	const user = await User.findById(userId);
+
+	if (!user)
+	{
+		responseObject.code = 404;
+		responseObject.message = "User not found";
+		return res.error(responseObject);
+	}
+
+	// Set the password virtual property to update the encrypted password
+	user.password = password;
+	await user.save();
+
+	responseObject.code = 200;
+	responseObject.message = "Password reset successful";
+	return res.success(responseObject);
 });
