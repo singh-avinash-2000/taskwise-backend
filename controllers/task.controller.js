@@ -20,7 +20,9 @@ exports.fetchTaskDetails = asyncHandler(async (req, res) =>
 	const { project_id, task_key } = req.params;
 	const responseObject = {};
 
-	const taskDetails = await Task.findOne({ project: project_id, task_key: task_key });
+	const taskDetails = await Task.findOne({ project: project_id, task_key: task_key })
+		.populate('assignee', 'display_name') // populate the assignee field with the username and email fields of the corresponding User document
+		.populate('reporter', 'display_name'); // populate the reporter field with the username and email fields of the corresponding User document
 
 	responseObject.message = "Successfully fetched task details";
 	responseObject.result = taskDetails;
@@ -86,4 +88,33 @@ exports.updateTaskDetails = asyncHandler(async (req, res) =>
 
 	// 	body.task_key = key + "-" + counter.count;
 	// }
+});
+
+exports.fetchSubTasksForTask = asyncHandler(async (req, res) =>
+{
+	const { project_id, task_key } = req.params;
+	const responseObject = {};
+
+	if (!project_id || !task_key)
+	{
+		responseObject.code = 400;
+		responseObject.message = "Bad Request";
+
+		return res.error(responseObject);
+	}
+
+	const record = await Task.find({ type: 'SUB_TASK', project: project_id, parent_task: task_key });
+
+	if (!record)
+	{
+		responseObject.code = 404;
+		responseObject.message = "No sub tasks found";
+
+		return res.error(responseObject);
+	}
+
+	responseObject.message = "Successfully fetched sub tasks";
+	responseObject.result = record;
+
+	return res.success(responseObject);
 });

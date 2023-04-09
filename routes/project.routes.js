@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { hasPermission, hasProjectAccess, attachProjectData } = require("@middlewares/authorization.middleware");
 const { fetchProjectListForUser, createNewProject, fetchProjectDetails, updateProjectDetails, deleteProject, fetchProjectMembers, addMemberToProject, removeMemberFromProject, updateProjectMemberDetails, fetchSearchedProjects } = require("@controllers/project.controller");
-const { fetchTasksForProject, fetchTaskDetails, addTasktoProject, updateTaskDetails } = require("@controllers/task.controller");
+const { fetchTasksForProject, fetchTaskDetails, addTasktoProject, updateTaskDetails, fetchSubTasksForTask } = require("@controllers/task.controller");
 
 // PROJECTS
 router.route(`/`).get(fetchProjectListForUser);
@@ -23,5 +23,6 @@ router.route(`/:project_id/tasks`).get(attachProjectData, hasProjectAccess, fetc
 router.route(`/:project_id/tasks`).post(attachProjectData, hasProjectAccess, addTasktoProject);
 router.route(`/:project_id/tasks/:task_key`).get(attachProjectData, hasProjectAccess, fetchTaskDetails);
 router.route(`/:project_id/tasks/:task_key`).patch(attachProjectData, hasProjectAccess, hasPermission(["ADMIN", "OWNER"]), updateTaskDetails);
+router.route(`/:project_id/tasks/:task_key/subtasks`).get(attachProjectData, hasProjectAccess, fetchSubTasksForTask);
 
 module.exports = router;
