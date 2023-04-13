@@ -7,7 +7,7 @@ exports.fetchTasksForProject = asyncHandler(async (req, res) =>
 	const { project_id } = req.params;
 	const responseObject = {};
 
-	const tasks = await Task.find({ project: project_id });
+	const tasks = await Task.find({ type: 'MAIN_TASK', project: project_id });
 
 	responseObject.message = "Successfully fetched all tasks";
 	responseObject.result = tasks;
