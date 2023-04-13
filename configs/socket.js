@@ -1,35 +1,56 @@
-const socketIO = require('socket.io');
+const { Server } = require("socket.io");
+const { validate } = require('@configs/jwt');
+
 
 let io;
 let socketObject = {};
 
 function createSocket(server)
 {
-	io = socketIO(server, {
-		cors: {
-			origin: 'http://localhost:3000',
-			methods: "*",
+
+	io = new Server(server,
+		{
+			cors: {
+				origin: 'http://localhost:3000',
+				methods: "*",
+			}
+		});
+
+	io.use((socket, next) => 
+	{
+		try
+		{
+			const accessToken = socket.handshake.auth.token;
+			const decoded = validate(accessToken);
+			if (decoded)
+			{
+				socket.userId = decoded.user._id;
+				next();
+			}
+		} catch (error)
+		{
+			next(new Error(error));
 		}
 	});
 
-	io.on('connection', (socket) =>
+	io.on('connection', async (socket) =>
 	{
-		socket.on("user-connected", data =>
-		{
-			socketObject[data] = socket.id;
-			console.log(data, "connected");
-		});
 
-		socket.on("invite-sent", data =>
-		{
-			console.log(socket.id);
-			console.log(data);
-		});
+		console.log(socket.id, 'user connected');
+		const userId = socket.userId;
+		const socketId = socket.id;
+		socketObject[userId] = socketId;
 
-		socket.on('disconnect', () =>
-		{
-			console.log(socket.id, 'user disconnected');
-		});
+		// socket.on("invite-sent", data =>
+		// {
+		// 	console.log(socket.id);
+		// 	console.log(data);
+		// });
+
+		// socket.on('disconnect', () =>
+		// {
+		// 	console.log(socket.id, 'user disconnected');
+		// });
 	});
 
 	io.on("error", (error) =>

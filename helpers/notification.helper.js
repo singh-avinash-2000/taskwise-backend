@@ -7,24 +7,19 @@ exports.sendNotificationToUser = async ({ to, from, event, payload }) =>
 	{
 		const Socket = getSocket();
 
-		Socket.to(socketObject[to]).emit(event, payload, (ack) =>
+		const socketId = socketObject[to];
+		if (socketId)
 		{
-			if (ack === 'success')
-			{
-				console.log('Event emitted successfully');
-			} else
-			{
-				console.log('Event delivery failed');
-			}
-		});
+			Socket.to(socketId).emit(event, payload);
 
-		await Notification.create({
-			to,
-			from,
-			event,
-			payload,
-			read: false
-		});
+			await Notification.create({
+				to,
+				from,
+				event,
+				payload,
+				read: false
+			});
+		}
 	} catch (error)
 	{
 		console.log(error);

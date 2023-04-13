@@ -47,6 +47,7 @@ exports.login = asyncHandler(async (req, res) =>
 		res.cookie('jwt', refreshToken, {
 			httpOnly: true,
 			secure: true,
+			sameSite: "none"
 		},);
 
 		responseObject.message = "Successfully logged in";
@@ -96,6 +97,7 @@ exports.register = asyncHandler(async (req, res) =>
 	res.cookie('jwt', refreshToken, {
 		httpOnly: true,
 		secure: true,
+		sameSite: "none"
 	});
 
 	responseObject.result = { accessToken };
@@ -111,6 +113,7 @@ exports.logout = asyncHandler(async (req, res) =>
 	res.clearCookie('jwt', {
 		httpOnly: true,
 		secure: true,
+		sameSite: "none"
 	});
 	responseObject.message = "Successfully logged out";
 	return res.success(responseObject);

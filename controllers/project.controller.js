@@ -160,7 +160,8 @@ exports.addMemberToProject = asyncHandler(async (req, res) =>
 			message: "You are invited to collaborate",
 			userName: req.user.fullName,
 			projectName: projectDetails.name,
-			projectAccess: body.role
+			projectAccess: body.role,
+			type: "INVITE"
 		}
 	});
 
