@@ -8,10 +8,7 @@ const cookieParser = require('cookie-parser');
 const { responseMiddleware } = require("@middlewares/response.middleware");
 const { errorHandler } = require("@middlewares/error.middleware");
 const { authenticateRequest } = require("@middlewares/authentication.middleware");
-const { Server } = require("socket.io");
-const { registerSocketEvents } = require("@controllers/socket.controller");
-
-var SocketUsers = {};
+const { createSocket } = require("@configs/socket");
 
 const initApp = async (connectDB) =>
 {
@@ -21,12 +18,7 @@ const initApp = async (connectDB) =>
 
 		const app = express();
 		const httpServer = createServer(app);
-		const io = new Server(httpServer, {
-			cors: {
-				origin: 'http://localhost:3000',
-				methods: "*",
-			}
-		});
+		createSocket(httpServer);
 
 		app.use(helmet());
 		app.use(cookieParser());
@@ -60,32 +52,11 @@ const initApp = async (connectDB) =>
 		app.use(authenticateRequest);
 		app.use(`/api/projects`, require("@routes/project.routes"));
 		app.use(`/api/misc`, require("@routes/misc.routes"));
+		app.use(`/api/user`, require("@routes/user.routes"));
 
 		app.use(errorHandler);
 
 		const port = process.env.PORT || 5000;
-
-		io.on("connection", (socket) =>
-		{
-			console.log("someone-connected", socket.id);
-			socket.on("user-connected", data =>
-			{
-				SocketUsers[data] = socket.id;
-				console.log(SocketUsers);
-
-				socket.emit("add-to-project", {
-					message: "you have been invited to a new project",
-					count: Math.ceil(Math.random() * 10)
-				});
-			});
-
-			socket.on("disconnect", () =>
-			{
-				console.log(socket.id, "disconnected");
-			});
-
-			registerSocketEvents(socket);
-		});
 
 		await httpServer.listen(port);
 
@@ -104,3 +75,5 @@ module.exports =
 {
 	initApp
 };
+
+

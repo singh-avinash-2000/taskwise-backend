@@ -38,17 +38,18 @@ exports.addTasktoProject = asyncHandler(async (req, res) =>
 	const body = req.body;
 	const responseObject = {};
 
-	if (body.type == "MAIN_TASK")
-	{
-		const counter = await Counter.findOneAndUpdate(
-			{ _id: 'tasks' },
-			{ $inc: { count: 1 } },
-			{ new: true, upsert: true }
-		);
+	const counter = await Counter.findOneAndUpdate(
+		{ _id: project_id },
+		{ $inc: { count: 1 } },
+		{ new: true, upsert: true }
+	);
 
-		body.task_key = key + "-" + counter.count;
+	if (body.type == "SUB_TASK")
+	{
+		body.parent_task = body.parent_task_id;
 	}
 
+	body.task_key = key + "-" + counter.count;
 	body.reporter = _id;
 
 	const payload = {

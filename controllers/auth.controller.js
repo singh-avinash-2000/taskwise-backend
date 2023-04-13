@@ -33,12 +33,14 @@ exports.login = asyncHandler(async (req, res) =>
 	{
 		// Generating access token here
 		const accessToken = JWT.generate({
-			_id: user._id
+			_id: user._id,
+			fullName: user.first_name + " " + user.last_name
 		}, "15m"); //generated accessToken with 15 min expiration time
 
 		// Generating refresh token here
 		const refreshToken = JWT.generate({
-			_id: user._id
+			_id: user._id,
+			fullName: user.first_name + " " + user.last_name
 		}, "8h");	// generated refreshToken with 8 hour expiration time
 
 		//Added refresh token to cookie
@@ -81,11 +83,13 @@ exports.register = asyncHandler(async (req, res) =>
 	responseObject.message = "You have successfully registered!";
 
 	const accessToken = JWT.generate({
-		_id: result._id
+		_id: result._id,
+		fullName: result.first_name + " " + result.last_name
 	}, "15m"); //generated accessToken with 15 min expiration time
 
 	const refreshToken = JWT.generate({
-		_id: result._id
+		_id: result._id,
+		fullName: result.first_name + " " + result.last_name
 	}, "8h");	// generated refreshToken with 8 hour expiration time
 
 	//Added refresh token to cookie
@@ -145,7 +149,8 @@ exports.refreshAccessToken = asyncHandler(async (req, res) =>
 		if (decoded)
 		{
 			const accessToken = JWT.generate({
-				_id: decoded.user._id
+				_id: decoded.user._id,
+				fullName: decoded.user.fullName
 			}, "15m"); //generated accessToken with 15 min expiration time
 
 			responseObject.message = "Successfully refreshed access token";
@@ -191,7 +196,8 @@ exports.forgotPassword = asyncHandler(async (req, res) =>
 	}
 
 	const resetToken = JWT.generate({
-		_id: userWithEmail._id
+		_id: userWithEmail._id,
+		fullName: userWithEmail.first_name + " " + userWithEmail.last_name
 	}, "10m"); //generated resetToken with 10 min expiration time
 
 	let origin = 'http://localhost:3000';
@@ -311,3 +317,4 @@ exports.resetPassword = asyncHandler(async (req, res) =>
 	responseObject.message = "Password reset successful";
 	return res.success(responseObject);
 });
+

@@ -26,7 +26,7 @@ const hasPermission = (asked_permission) =>
 
 const attachProjectData = async (req, res, next) =>
 {
-	const projects = await Project.find({ "members.user": req.user._id }, { "_id": 1, "role": "$members.role", "key": 1 });
+	const projects = await Project.find({ "members.user": req.user._id }, { "_id": 1, "role": "$members.role", "key": 1, "name": 1 });
 
 	const formattedProjects = {};
 
