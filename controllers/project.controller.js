@@ -1,5 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const Project = require("@models/project");
+const User = require("@models/user");
+const { sendNotificationToUser } = require("@helpers/notification.helper");
+const socket = require("../configs/socket");
 
 exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 {
@@ -133,14 +136,35 @@ exports.addMemberToProject = asyncHandler(async (req, res) =>
 	const { project_id } = req.params;
 	const responseObject = {};
 	const body = req.body;
+	const projectDetails = req.projects[project_id];
+
+	const userToAdd = await User.findOne({ email: body.email.trim() });
+
+	if (!userToAdd)
+	{
+		responseObject.message = "Sorry this user doesn't exists";
+		responseObject.code = 404;
+	}
 
 	await Project.findByIdAndUpdate(
 		{ _id: project_id },
-		{ $push: { members: { user: body.id, role: body.role || "READ" } } }
+		{ $push: { members: { user: userToAdd._id, role: body.role || "READ" } } }
 	);
 
-	responseObject.message = "Successfully add member to project";
+	await sendNotificationToUser({
+		to: `${userToAdd._id}`,
+		from: req.user._id,
+		event: "collaboration-invite",
+		payload: {
+			project_id: project_id,
+			message: "You are invited to collaborate",
+			userName: req.user.fullName,
+			projectName: projectDetails.name,
+			projectAccess: body.role
+		}
+	});
 
+	responseObject.message = "Successfully add member to project";
 	return res.success(responseObject);
 });
 
