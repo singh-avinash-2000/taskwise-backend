@@ -11,8 +11,13 @@ exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 
 	const { searchQuery } = req.query;
 	const queryParameters = {
-		"members.user": _id,
-		status: "ACTIVE"
+		status: 'ACTIVE',
+		members: {
+			$elemMatch: {
+				user: _id,
+				status: { $in: ['JOINED', 'ACCEPTED'] }
+			}
+		}
 	};
 
 	if (searchQuery)
@@ -54,13 +59,18 @@ exports.createNewProject = asyncHandler(async (req, res) =>
 		{
 			user: _id,
 			role: "OWNER",
-			status: "ACCEPTED"
+			status: "JOINED"
 		}
 	];
 
 	body.type = body.type.toUpperCase();
 
-	await Project.create(body);
+	const response = await Project.create(body);
+	responseObject.result = {
+		name: response.name,
+		_id: response._id,
+		role: response.members[0].role || "OWNER"
+	};
 
 	responseObject.message = "Successfully added a new project";
 	return res.success(responseObject);
@@ -144,6 +154,15 @@ exports.addMemberToProject = asyncHandler(async (req, res) =>
 	{
 		responseObject.message = "Sorry this user doesn't exists";
 		responseObject.code = 404;
+	}
+
+	const isAlreadyMember = await Project.findOne({ _id: project_id, "members.user": userToAdd._id });
+
+	if (isAlreadyMember)
+	{
+		responseObject.message = "User is already a member of this project";
+		responseObject.code = 400;
+		return res.error(responseObject);
 	}
 
 	await Project.findByIdAndUpdate(

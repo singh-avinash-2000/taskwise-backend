@@ -7,7 +7,10 @@ exports.fetchTasksForProject = asyncHandler(async (req, res) =>
 	const { project_id } = req.params;
 	const responseObject = {};
 
-	const tasks = await Task.find({ type: 'MAIN_TASK', project: project_id });
+	const tasks = await Task.find({ type: 'MAIN_TASK', project: project_id }).populate({ path: 'project', select: 'name' }).populate({
+		path: 'assignee',
+		select: 'display_name profile_picture'
+	}).populate({ path: 'reporter', select: 'display_name profile_picture' });
 
 	responseObject.message = "Successfully fetched all tasks";
 	responseObject.result = tasks;
