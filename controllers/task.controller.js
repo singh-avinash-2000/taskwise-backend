@@ -7,10 +7,7 @@ exports.fetchTasksForProject = asyncHandler(async (req, res) =>
 	const { project_id } = req.params;
 	const responseObject = {};
 
-	const tasks = await Task.find({ type: 'MAIN_TASK', project: project_id }).populate({ path: 'project', select: 'name' }).populate({
-		path: 'assignee',
-		select: 'display_name profile_picture'
-	}).populate({ path: 'reporter', select: 'display_name profile_picture' });
+	const tasks = await Task.find({ project: project_id });
 
 	responseObject.message = "Successfully fetched all tasks";
 	responseObject.result = tasks;
@@ -23,9 +20,7 @@ exports.fetchTaskDetails = asyncHandler(async (req, res) =>
 	const { project_id, task_key } = req.params;
 	const responseObject = {};
 
-	const taskDetails = await Task.findOne({ project: project_id, task_key: task_key })
-		.populate('assignee', 'display_name') // populate the assignee field with the username and email fields of the corresponding User document
-		.populate('reporter', 'display_name'); // populate the reporter field with the username and email fields of the corresponding User document
+	const taskDetails = await Task.findOne({ project: project_id, task_key: task_key });
 
 	responseObject.message = "Successfully fetched task details";
 	responseObject.result = taskDetails;

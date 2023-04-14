@@ -132,11 +132,11 @@ exports.fetchProjectMembers = asyncHandler(async (req, res) =>
 	const record = await Project.findOne({
 		_id: project_id,
 		"members.user": _id
-	}).populate({ path: "members.user", select: { "_id": 1, "first_name": 1, "last_name": 1, "display_name": 1 } });
+	}).populate({ path: "members.user", select: { "_id": 1, "first_name": 1, "last_name": 1, "display_name": 1, "profile_picture": 1 } });
 
 
 	responseObject.message = "Successfully fetched member details";
-	responseObject.result = { name: record.name, members: record.members };
+	responseObject.result = record.members;
 
 	return res.success(responseObject);
 });
