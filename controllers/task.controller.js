@@ -44,7 +44,11 @@ exports.addTasktoProject = asyncHandler(async (req, res) =>
 
 	if (body.type == "SUB_TASK")
 	{
-		body.parent_task = body.parent_task_id;
+		const parentTaskDetails = await Task.findOne({
+			key: body.parent_task_key
+		});
+
+		body.parent_task_id = parentTaskDetails._id;
 	}
 
 	body.task_key = key + "-" + counter.count;
@@ -77,16 +81,6 @@ exports.updateTaskDetails = asyncHandler(async (req, res) =>
 	responseObject.result = record;
 
 	return res.success(responseObject);
-	// if (body.type == "SUB_TASK")
-	// {
-	// 	const counter = await Counter.findOneAndUpdate(
-	// 		{ _id: 'tasks' },
-	// 		{ $inc: { count: 1 } },
-	// 		{ new: true, upsert: true }
-	// 	);
-
-	// 	body.task_key = key + "-" + counter.count;
-	// }
 });
 
 exports.fetchSubTasksForTask = asyncHandler(async (req, res) =>

@@ -39,11 +39,15 @@ const taskSchema = Schema(
 		},
 		documents: [
 			{
-				file_name: {
+				name: {
 					type: String
 				},
-				link: {
+				url: {
 					type: String
+				},
+				status: {
+					type: String,
+					default: "done"
 				}
 			}
 		],
