@@ -185,7 +185,6 @@ exports.addMemberToProject = asyncHandler(async (req, res) =>
 		{ $push: { members: { user: userToAdd._id, role: body.role || "READ" } } }
 	);
 
-	//sending email for invitation
 	let origin = 'http://localhost:3000';
 	if (process.env.NODE_ENV === 'production')
 	{
@@ -315,4 +314,20 @@ exports.fetchSearchedProjects = asyncHandler(async (req, res) =>
 		return res.error(error);
 	}
 
+});
+
+exports.invitationAction = asyncHandler(async (req, res) =>
+{
+	const { _id } = req.user;
+	const { project_id } = req.params;
+	const body = req.body;
+	let responseObject = {};
+
+	await Project.findOneAndUpdate(
+		{ _id: project_id, 'members.user': _id },
+		{ 'members.$.status': body.action }
+	);
+
+	responseObject.message = "Successfully updated your status";
+	return res.success(responseObject);
 });

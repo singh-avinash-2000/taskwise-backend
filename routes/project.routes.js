@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { hasPermission, hasProjectAccess, attachProjectData } = require("@middlewares/authorization.middleware");
-const { fetchProjectListForUser, createNewProject, fetchProjectDetails, updateProjectDetails, deleteProject, fetchProjectMembers, addMemberToProject, removeMemberFromProject, updateProjectMemberDetails, fetchSearchedProjects } = require("@controllers/project.controller");
+const { fetchProjectListForUser, createNewProject, fetchProjectDetails, updateProjectDetails, deleteProject, fetchProjectMembers, addMemberToProject, removeMemberFromProject, updateProjectMemberDetails, fetchSearchedProjects, invitationAction } = require("@controllers/project.controller");
 const { fetchTasksForProject, fetchTaskDetails, addTasktoProject, updateTaskDetails, fetchSubTasksForTask } = require("@controllers/task.controller");
 
 // PROJECTS
@@ -17,6 +17,8 @@ router.route(`/:project_id/members`).get(attachProjectData, hasProjectAccess, fe
 router.route(`/:project_id/members`).post(attachProjectData, hasProjectAccess, hasPermission(["ADMIN", "OWNER"]), addMemberToProject);
 router.route(`/:project_id/members/:user_id`).delete(attachProjectData, hasProjectAccess, hasPermission(["ADMIN", "OWNER"]), removeMemberFromProject);
 router.route(`/:project_id/members/:user_id`).patch(attachProjectData, hasProjectAccess, hasPermission(["ADMIN", "OWNER"]), updateProjectMemberDetails);
+router.route(`/:project_id/invite-action`).post(attachProjectData, hasProjectAccess, invitationAction);
+
 
 // TASKS
 router.route(`/:project_id/tasks`).get(attachProjectData, hasProjectAccess, fetchTasksForProject);
