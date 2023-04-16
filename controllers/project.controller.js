@@ -4,6 +4,15 @@ const User = require("@models/user");
 const { sendNotificationToUser } = require("@helpers/notification.helper");
 const { getSocket, getSocketObject, getUserSocketInstance } = require("../configs/socket");
 const { sendProjectNotification } = require("../helpers/notification.helper");
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+	service: "gmail",
+	auth: {
+		user: process.env.EMAIL_ID,
+		pass: process.env.EMAIL_PASSWORD
+	}
+});
 
 exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 {
@@ -39,7 +48,10 @@ exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 	const Socket = getUserSocketInstance(_id);
 	let formattedProjects = records.map(r =>
 	{
-		Socket.join(r._doc._id);
+		Socket.on("connection", () =>
+		{
+			Socket.join(r._doc._id);
+		});
 		return {
 			...r._doc,
 			role: r._doc.role[0]
@@ -173,21 +185,50 @@ exports.addMemberToProject = asyncHandler(async (req, res) =>
 		{ $push: { members: { user: userToAdd._id, role: body.role || "READ" } } }
 	);
 
-	await sendNotificationToUser({
-		to: userToAdd._id,
-		event: "new-notification",
-		payload: {
-			message: "You are invited to collaborate",
-			is_actionable: true,
-			action_title: req.projects[project_id].name + " - " + body.role || "READ",
-			redirect_url: `/project-invite/${project_id}`,
-			initiator_name: req.user.display_name,
-			initiator_profile: req.user.profile_picture
+	//sending email for invitation
+	let origin = 'http://localhost:3000';
+	if (process.env.NODE_ENV === 'production')
+	{
+		origin = process.env.CORS_ORIGIN;
+	}
+
+	const redirect_url = `${origin}/${req.user.display_name}/${project_id}/invitations`;
+	const message = `You are invited to collaborate on ${projectDetails.name}. Please click on the link below to take an action.\n\n ${redirect_url}`;
+
+	const mailOptions = {
+		from: process.env.EMAIL_ID,
+		to: body.email.trim(),
+		subject: "You are invited to collaborate",
+		text: message
+	};
+
+	transporter.sendMail(mailOptions, async (error, info) =>
+	{
+		if (error)
+		{
+			responseObject.code = 500;
+			responseObject.message = "Error sending invitation";
+			return res.error(responseObject);
+		}
+		else
+		{
+			await sendNotificationToUser({
+				to: userToAdd._id,
+				event: "new-notification",
+				payload: {
+					message: "You are invited to collaborate",
+					is_actionable: true,
+					action_title: req.projects[project_id].name + " - " + body.role || "READ",
+					redirect_url: `/project-invite/${project_id}`,
+					initiator_name: req.user.display_name,
+					initiator_profile: req.user.profile_picture
+				}
+			});
+
+			responseObject.message = "Successfully sent invite to user";
+			return res.success(responseObject);
 		}
 	});
-
-	responseObject.message = "Successfully added member to project";
-	return res.success(responseObject);
 });
 
 exports.removeMemberFromProject = asyncHandler(async (req, res) =>

@@ -36,6 +36,7 @@ const attachProjectData = async (req, res, next) =>
 	});
 
 	req.projects = formattedProjects;
+	console.log(req.projects);
 	return next();
 };
 
