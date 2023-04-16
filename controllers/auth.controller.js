@@ -12,7 +12,6 @@ const transporter = nodemailer.createTransport({
 	}
 });
 
-// Logs in the user
 exports.login = asyncHandler(async (req, res) =>
 {
 	let responseObject = {};
@@ -31,19 +30,13 @@ exports.login = asyncHandler(async (req, res) =>
 
 	if (user.authenticate(password))
 	{
-		// Generating access token here
-		const accessToken = JWT.generate({
-			_id: user._id,
-			fullName: user.first_name + " " + user.last_name
-		}, "15m"); //generated accessToken with 15 min expiration time
+		delete user.salt;
+		delete user.encrypted_password;
+		delete user.status;
 
-		// Generating refresh token here
-		const refreshToken = JWT.generate({
-			_id: user._id,
-			fullName: user.first_name + " " + user.last_name
-		}, "8h");	// generated refreshToken with 8 hour expiration time
+		const accessToken = JWT.generate(user, "15m");
+		const refreshToken = JWT.generate(user, "8h");
 
-		//Added refresh token to cookie
 		res.cookie('jwt', refreshToken, {
 			httpOnly: true,
 			secure: true,
@@ -63,7 +56,6 @@ exports.login = asyncHandler(async (req, res) =>
 	}
 });
 
-// Registers a new user
 exports.register = asyncHandler(async (req, res) =>
 {
 	let responseObject = {};
@@ -83,17 +75,13 @@ exports.register = asyncHandler(async (req, res) =>
 
 	responseObject.message = "You have successfully registered!";
 
-	const accessToken = JWT.generate({
-		_id: result._id,
-		fullName: result.first_name + " " + result.last_name
-	}, "15m"); //generated accessToken with 15 min expiration time
+	delete result.salt;
+	delete result.encrypted_password;
+	delete result.status;
 
-	const refreshToken = JWT.generate({
-		_id: result._id,
-		fullName: result.first_name + " " + result.last_name
-	}, "8h");	// generated refreshToken with 8 hour expiration time
+	const accessToken = JWT.generate(result, "15m");
+	const refreshToken = JWT.generate(result, "8h");
 
-	//Added refresh token to cookie
 	res.cookie('jwt', refreshToken, {
 		httpOnly: true,
 		secure: true,
@@ -101,12 +89,9 @@ exports.register = asyncHandler(async (req, res) =>
 	});
 
 	responseObject.result = { accessToken };
-
 	return res.success(responseObject);
 });
 
-
-//Logs out the user by clearing the cookie
 exports.logout = asyncHandler(async (req, res) =>
 {
 	let responseObject = {};
@@ -119,7 +104,6 @@ exports.logout = asyncHandler(async (req, res) =>
 	return res.success(responseObject);
 });
 
-//Checks if the user is already registered
 exports.checkValidDisplayName = asyncHandler(async (req, res) => 
 {
 	let responseObject = {};
@@ -139,7 +123,6 @@ exports.checkValidDisplayName = asyncHandler(async (req, res) =>
 	return res.success(responseObject);
 });
 
-//Refresh Access Token after Access Token expires
 exports.refreshAccessToken = asyncHandler(async (req, res) =>
 {
 	let responseObject = {};
@@ -151,10 +134,7 @@ exports.refreshAccessToken = asyncHandler(async (req, res) =>
 		const decoded = JWT.validate(jwt);
 		if (decoded)
 		{
-			const accessToken = JWT.generate({
-				_id: decoded.user._id,
-				fullName: decoded.user.fullName
-			}, "15m"); //generated accessToken with 15 min expiration time
+			const accessToken = JWT.generate(decoded.user, "15m");
 
 			responseObject.message = "Successfully refreshed access token";
 			responseObject.result = { accessToken };
@@ -198,10 +178,7 @@ exports.forgotPassword = asyncHandler(async (req, res) =>
 		return res.error(responseObject);
 	}
 
-	const resetToken = JWT.generate({
-		_id: userWithEmail._id,
-		fullName: userWithEmail.first_name + " " + userWithEmail.last_name
-	}, "10m"); //generated resetToken with 10 min expiration time
+	const resetToken = JWT.generate(userWithEmail, "10m");
 
 	let origin = 'http://localhost:3000';
 	if (process.env.NODE_ENV === 'production')

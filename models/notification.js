@@ -3,28 +3,49 @@ const Schema = mongoose.Schema;
 
 const NotificationSchema = new Schema(
 	{
-		to: {
+		user: {
 			type: Schema.Types.ObjectId,
-			ref: "users"
+			ref: "users",
+			index: true
 		},
-		from: {
-			type: Schema.Types.ObjectId,
-			ref: "users"
+		type: {
+			type: String,
+			enum: ["USER", "PROJECT"],
+			required: true
 		},
 		project: {
 			type: Schema.Types.ObjectId,
-			ref: "projects"
+			ref: "projects",
+			index: true
 		},
-		event: {
-			type: String,
-			trim: true
+		payload: {
+			// initiator_name: {
+			// 	type: String,
+			// 	required: true
+			// },
+			// message: {
+			// type: String,
+			// required: true
+			// initiator_profile: {
+			// 	type: String
+			// },
+			// is_actionable: {
+			// 	type: Boolean,
+			// 	default: false
+			// },
+			// action_title: {
+			// 	type: String
+			// },
+			// redirect_url: {
+			// 	type: String,
+			// 	required: true
+			// }
 		},
-		read: {
+		is_read: {
 			type: Boolean,
-			required: true,
-			defaultValue: false
-		},
-		payload: {}
+			default: false,
+			index: true
+		}
 	},
 	{
 		timestamps: { createdAt: "created_at", updatedAt: "updated_at" }

@@ -66,12 +66,6 @@ const userSchema = Schema(
 					this.salt = uuid();
 					this.encrypted_password = this.securePassword(password);
 				},
-			},
-			full_name: {
-				get()
-				{
-					return this.first_name + " " + this.last_name;
-				}
 			}
 		},
 		toObject:

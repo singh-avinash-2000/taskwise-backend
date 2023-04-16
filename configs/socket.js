@@ -35,22 +35,10 @@ function createSocket(server)
 
 	io.on('connection', async (socket) =>
 	{
-
-		console.log(socket.id, 'user connected');
+		console.log(socket.userId);
 		const userId = socket.userId;
 		const socketId = socket.id;
 		socketObject[userId] = socketId;
-
-		// socket.on("invite-sent", data =>
-		// {
-		// 	console.log(socket.id);
-		// 	console.log(data);
-		// });
-
-		// socket.on('disconnect', () =>
-		// {
-		// 	console.log(socket.id, 'user disconnected');
-		// });
 	});
 
 	io.on("error", (error) =>
@@ -64,8 +52,21 @@ function getSocket()
 	return io;
 }
 
+function getSocketObject()
+{
+	return socketObject;
+}
+
+function getUserSocketInstance(userId)
+{
+	const socketId = socketObject[userId];
+	const socket = io.sockets.sockets.get(socketId);
+	return socket;
+}
+
 module.exports = {
 	createSocket,
 	getSocket,
-	socketObject
+	getSocketObject,
+	getUserSocketInstance
 };

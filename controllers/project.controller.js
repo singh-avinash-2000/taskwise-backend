@@ -2,7 +2,8 @@ const asyncHandler = require("express-async-handler");
 const Project = require("@models/project");
 const User = require("@models/user");
 const { sendNotificationToUser } = require("@helpers/notification.helper");
-const socket = require("../configs/socket");
+const { getSocket, getSocketObject, getUserSocketInstance } = require("../configs/socket");
+const { sendProjectNotification } = require("../helpers/notification.helper");
 
 exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 {
@@ -15,7 +16,7 @@ exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 		members: {
 			$elemMatch: {
 				user: _id,
-				status: { $in: ['JOINED', 'ACCEPTED'] }
+				status: 'JOINED'
 			}
 		}
 	};
@@ -35,8 +36,10 @@ exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 		}
 	);
 
+	const Socket = getUserSocketInstance(_id);
 	let formattedProjects = records.map(r =>
 	{
+		Socket.join(r._doc._id);
 		return {
 			...r._doc,
 			role: r._doc.role[0]
@@ -171,20 +174,19 @@ exports.addMemberToProject = asyncHandler(async (req, res) =>
 	);
 
 	await sendNotificationToUser({
-		to: `${userToAdd._id}`,
-		from: req.user._id,
-		event: "collaboration-invite",
+		to: userToAdd._id,
+		event: "new-notification",
 		payload: {
-			project_id: project_id,
 			message: "You are invited to collaborate",
-			userName: req.user.fullName,
-			projectName: projectDetails.name,
-			projectAccess: body.role,
-			type: "INVITE"
+			is_actionable: true,
+			action_title: req.projects[project_id].name + " - " + body.role || "READ",
+			redirect_url: `/project-invite/${project_id}`,
+			initiator_name: req.user.display_name,
+			initiator_profile: req.user.profile_picture
 		}
 	});
 
-	responseObject.message = "Successfully add member to project";
+	responseObject.message = "Successfully added member to project";
 	return res.success(responseObject);
 });
 
@@ -210,10 +212,24 @@ exports.updateProjectMemberDetails = asyncHandler(async (req, res) =>
 	const body = req.body;
 	const responseObject = {};
 
-	await Project.findOneAndUpdate(
+	const updatedProjectDetails = await Project.findOneAndUpdate(
 		{ _id: project_id, 'members.user': user_id },
-		{ 'members.$.role': body.role }
+		{ 'members.$.role': body.role },
+		{ new: true }
 	);
+
+	const userDetails = await User.findById(user_id);
+
+	await sendProjectNotification({
+		to: project_id,
+		event: "new-notification",
+		payload: {
+			initiator_name: updatedProjectDetails.name,
+			message: `${userDetails.display_name} now has ${body.role} access.`,
+			is_actionable: false,
+			redirect_url: `/projects/${project_id}/members`
+		}
+	});
 
 	responseObject.message = "Successfully updated member's permission";
 

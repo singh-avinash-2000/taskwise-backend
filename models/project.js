@@ -59,7 +59,7 @@ const projectSchema = Schema(
 				},
 				status: {
 					type: String,
-					enum: ["PENDING", "ACCEPTED", "REMOVED", "REJECTED", "JOINED"],
+					enum: ["PENDING", "REMOVED", "REJECTED", "JOINED"],
 					default: "PENDING"
 				}
 			}
