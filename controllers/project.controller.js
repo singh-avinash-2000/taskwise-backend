@@ -98,7 +98,7 @@ exports.fetchProjectDetails = asyncHandler(async (req, res) =>
 
 	const record = await Project.findOne({
 		_id: project_id
-	});
+	}).populate("members.user", { "first_name": 1, "last_name": 1, "profile_picture": 1 });
 
 	responseObject.message = "Successfully fetched project details";
 	responseObject.result = record;
