@@ -1,6 +1,6 @@
 const { Server } = require("socket.io");
 const { validate } = require('@configs/jwt');
-
+const Project = require("@models/project");
 
 let io;
 let socketObject = {};
@@ -14,7 +14,8 @@ function createSocket(server)
 				origin: 'http://localhost:3000',
 				methods: "*",
 			}
-		});
+		}
+	);
 
 	io.use((socket, next) => 
 	{
@@ -35,10 +36,32 @@ function createSocket(server)
 
 	io.on('connection', async (socket) =>
 	{
-		console.log(socket.userId);
 		const userId = socket.userId;
 		const socketId = socket.id;
+
 		socketObject[userId] = socketId;
+		console.table(socketObject);
+
+		const projects = await Project.find({
+			status: 'ACTIVE',
+			members: {
+				$elemMatch: {
+					user: userId,
+					status: 'JOINED'
+				}
+			}
+		});
+
+		projects.map(p =>
+		{
+			socket.join(`${p._doc._id}`);
+		});
+
+		socket.on("disconnect", () =>
+		{
+			delete socketObject[socket.userId];
+			console.log("user removed from socket list");
+		});
 	});
 
 	io.on("error", (error) =>
