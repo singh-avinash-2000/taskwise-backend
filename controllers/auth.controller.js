@@ -18,7 +18,7 @@ exports.login = asyncHandler(async (req, res) =>
 
 	const { email, password } = req.body;
 
-	const user = await User.findOne({ email: email.trim() });
+	const user = await User.findOne({ email: email.trim().toLowerCase() });
 
 	if (!user)
 	{
@@ -61,7 +61,7 @@ exports.register = asyncHandler(async (req, res) =>
 	let responseObject = {};
 
 	const requestBody = req.body;
-	let user = await User.findOne({ email: requestBody.email.trim() });
+	let user = await User.findOne({ email: requestBody.email.trim().toLowerCase() });
 
 	if (user)
 	{
@@ -107,9 +107,9 @@ exports.logout = asyncHandler(async (req, res) =>
 exports.checkValidDisplayName = asyncHandler(async (req, res) => 
 {
 	let responseObject = {};
-	let { display_name } = req.body;
+	let { display_name } = req.query;
 
-	let user = await User.findOne({ display_name: display_name.trim() });
+	let user = await User.findOne({ display_name: display_name.trim().toLowerCase() });
 
 	if (user)
 	{
@@ -170,7 +170,7 @@ exports.forgotPassword = asyncHandler(async (req, res) =>
 		return res.error(responseObject);
 	}
 
-	const userWithEmail = await User.findOne({ email: email.trim() });
+	const userWithEmail = await User.findOne({ email: email.trim().toLowerCase() });
 	if (!userWithEmail)
 	{
 		responseObject.code = 404;

@@ -163,7 +163,7 @@ exports.addMemberToProject = asyncHandler(async (req, res) =>
 	const body = req.body;
 	const projectDetails = req.projects[project_id];
 
-	const userToAdd = await User.findOne({ email: body.email.trim() });
+	const userToAdd = await User.findOne({ email: body.email.trim().toLowerCase() });
 
 	if (!userToAdd)
 	{
