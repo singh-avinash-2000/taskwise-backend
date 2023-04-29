@@ -167,8 +167,9 @@ exports.addMemberToProject = asyncHandler(async (req, res) =>
 
 	if (!userToAdd)
 	{
-		responseObject.message = "Sorry this user doesn't exists";
+		responseObject.message = "Sorry this user doesn't exist. Please ask them to sign up first.";
 		responseObject.code = 404;
+		return res.error(responseObject);
 	}
 
 	const isAlreadyMember = await Project.findOne({ _id: project_id, "members.user": userToAdd._id });
