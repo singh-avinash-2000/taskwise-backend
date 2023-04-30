@@ -68,11 +68,10 @@ exports.updateUserProfilePicture = asyncHandler(async (req, res) =>
 exports.fetchUserNotifications = asyncHandler(async (req, res) =>
 {
 	const { _id } = req.user;
-	const { skip = 0, limit = 15 } = req.query;
 	let responseObject = {};
 
 	const projectIds = Object.keys(req.projects);
-	const notifications = await Notification.find({ $or: [{ user: _id }, { project: { $in: projectIds } }] }).sort({ created_at: -1 }).skip(skip).limit(limit);
+	const notifications = await Notification.find({ $or: [{ user: _id }, { project: { $in: projectIds } }] }).sort({ created_at: -1 });
 	const unReadCount = await Notification.count({ $or: [{ user: _id }, { project: { $in: projectIds } }], is_read: false });
 
 	responseObject.message = "Notifications fetched";
