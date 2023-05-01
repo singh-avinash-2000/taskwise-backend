@@ -88,8 +88,45 @@ exports.markAllNotificationsRead = asyncHandler(async (req, res) =>
 	const { _id } = req.user;
 	let responseObject = {};
 
-	await Notification.findAndUpdate({ user: _id, is_read: false }, { is_read: true });
+	await Notification.updateMany({ user: _id, is_read: false }, { is_read: true });
 
 	responseObject.message = "Successfully marked all notifications as read";
+	return res.success(responseObject);
+});
+
+
+exports.markNotificationRead = asyncHandler(async (req, res) =>
+{
+	const { _id } = req.user;
+	const { notification_id } = req.params;
+	let responseObject = {};
+
+	const notification = await Notification.findById(notification_id);
+	if (!notification)
+	{
+		responseObject.message = "Notification not found";
+		responseObject.code = 404;
+		return res.error(responseObject);
+	}
+
+	if (notification.type === "USER" && notification.user.toString() !== _id)
+	{
+		responseObject.message = "You are not authorized to mark this notification as read";
+		responseObject.code = 403;
+		return res.error(responseObject);
+	}
+
+	if (notification.type === "PROJECT" && !req.projects[notification.project.toString()])
+	{
+		responseObject.message = "You are not authorized to mark this notification as read";
+		responseObject.code = 403;
+		return res.error(responseObject);
+	}
+
+
+	notification.is_read = true;
+	await notification.save();
+
+	responseObject.message = "Successfully marked notification as read";
 	return res.success(responseObject);
 });
