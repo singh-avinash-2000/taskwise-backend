@@ -116,12 +116,14 @@ exports.updateProjectDetails = asyncHandler(async (req, res) =>
 
 	payload.type = payload.type.toUpperCase();
 
-	await Project.findOneAndUpdate(
+	const record = await Project.findOneAndUpdate(
 		{ _id: project_id },
-		payload
-	);
+		payload,
+		{ new: true }
+	).populate("members.user", { "first_name": 1, "last_name": 1, "profile_picture": 1 });
 
 	responseObject.message = "Successfully updated project details";
+	responseObject.result = record;
 
 	return res.success(responseObject);
 });
@@ -321,8 +323,32 @@ exports.invitationAction = asyncHandler(async (req, res) =>
 {
 	const { _id } = req.user;
 	const { project_id } = req.params;
+
+	if (!project_id)
+	{
+		responseObject.message = "Please provide a project id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
 	const body = req.body;
 	let responseObject = {};
+
+	const projectDetails = await Project.findOne({ _id: project_id, members: { $elemMatch: { user: _id } } });
+	if (!projectDetails)
+	{
+		responseObject.message = "You are not a member of this project";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	const userStatus = projectDetails.members.find(member => member.user.toString() === _id.toString()).status;
+	if (userStatus !== "PENDING")
+	{
+		responseObject.message = "You have already taken an action on this invitation";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
 
 	await Project.findOneAndUpdate(
 		{ _id: project_id, 'members.user': _id },
@@ -330,5 +356,63 @@ exports.invitationAction = asyncHandler(async (req, res) =>
 	);
 
 	responseObject.message = "Successfully updated your status";
+	return res.success(responseObject);
+});
+
+exports.fetchInvitedProjectDetails = asyncHandler(async (req, res) =>
+{
+	const { _id } = req.user;
+	const { project_id } = req.params;
+
+	if (!project_id)
+	{
+		responseObject.message = "Please provide a project id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	const responseObject = {};
+
+	const projectDetails = await Project.findOne({
+		_id: project_id
+	}).populate("members.user", { "first_name": 1, "last_name": 1, "profile_picture": 1, "display_name": 1, });
+
+	if (!projectDetails)
+	{
+		responseObject.message = "You are not a invited to this project";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	const userStatus = projectDetails.members.find(member => member.user._id.toString() === _id.toString()).status;
+	const invitedRole = projectDetails.members.find(member => member.user._id.toString() === _id.toString()).role;
+	if (userStatus !== "PENDING")
+	{
+		responseObject.message = "You have already taken an action on this invitation";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	responseObject.message = "Successfully fetched project details";
+
+	projectDetails.members = projectDetails.members.filter(member => member.status !== "PENDING");
+	console.log("first: ", projectDetails.members);
+	projectDetails.members = projectDetails.members.filter(member => member.user.toString() !== _id.toString());
+	console.log("second: ", projectDetails.members);
+	responseObject.result = {
+		name: projectDetails.name,
+		description: projectDetails.description,
+		role: invitedRole,
+		members: projectDetails.members.map(member => ({
+			_id: member.user._id,
+			display_name: member.user.display_name,
+			first_name: member.user.first_name,
+			last_name: member.user.last_name,
+			profile_picture: member.user.profile_picture,
+			role: member.role,
+			status: member.status
+		}))
+	};
+
 	return res.success(responseObject);
 });
