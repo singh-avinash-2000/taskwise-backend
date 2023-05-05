@@ -17,7 +17,7 @@ router.route(`/:project_id/members`).get(attachProjectData, hasProjectAccess, fe
 router.route(`/:project_id/members`).post(attachProjectData, hasProjectAccess, hasPermission(["ADMIN", "OWNER"]), addMemberToProject);
 router.route(`/:project_id/members/:user_id`).delete(attachProjectData, hasProjectAccess, hasPermission(["ADMIN", "OWNER"]), removeMemberFromProject);
 router.route(`/:project_id/members/:user_id`).patch(attachProjectData, hasProjectAccess, hasPermission(["ADMIN", "OWNER"]), updateProjectMemberDetails);
-router.route(`/:project_id/invite-action`).post(attachProjectData, hasProjectAccess, invitationAction);
+router.route(`/:project_id/invite-action`).post(attachProjectData, invitationAction);
 
 
 // TASKS

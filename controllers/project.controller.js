@@ -219,7 +219,7 @@ exports.addMemberToProject = asyncHandler(async (req, res) =>
 					message: "You are invited to collaborate",
 					is_actionable: true,
 					action_title: req.projects[project_id].name + " - " + body.role || "READ",
-					redirect_url: `/project-invite/${project_id}`,
+					redirect_url: `/${req.user.display_name}/${project_id}/invitations`,
 					initiator_name: req.user.display_name,
 					initiator_profile: req.user.profile_picture
 				}
