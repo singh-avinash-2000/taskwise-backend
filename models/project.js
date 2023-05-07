@@ -40,11 +40,11 @@ const projectSchema = Schema(
 		},
 		chat_enabled: {
 			type: Boolean,
-			default: true,
+			default: false,
 		},
 		document: {
 			type: Boolean,
-			default: true,
+			default: false,
 		},
 		members: [
 			{

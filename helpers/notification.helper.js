@@ -1,5 +1,5 @@
 const Notification = require("@models/notification");
-const { getSocket, getSocketObject } = require("@configs/socket");
+const { getSocket, getSocketObject, getUserSocketInstance } = require("@configs/socket");
 
 exports.sendNotificationToUser = async ({ to, event, payload }) =>
 {
@@ -28,10 +28,7 @@ exports.sendProjectNotification = async ({ to, event, payload, initiator }) =>
 {
 	try
 	{
-		// Broadcast event in a room
-		const Socket = getSocket();
-		const socketObject = getSocketObject();
-		const initiatorSocket = Socket.sockets.sockets.get(socketObject[initiator]);
+		const initiatorSocket = getUserSocketInstance(initiator);
 		initiatorSocket.to(to).emit(event, payload);
 
 		await Notification.create({

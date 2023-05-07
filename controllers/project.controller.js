@@ -45,13 +45,8 @@ exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 		}
 	);
 
-	const Socket = getUserSocketInstance(_id);
 	let formattedProjects = records.map(r =>
 	{
-		Socket.on("connection", () =>
-		{
-			Socket.join(r._doc._id);
-		});
 		return {
 			...r._doc,
 			role: r._doc.role[0]
@@ -336,6 +331,7 @@ exports.invitationAction = asyncHandler(async (req, res) =>
 	let responseObject = {};
 
 	const projectDetails = await Project.findOne({ _id: project_id, members: { $elemMatch: { user: _id } } });
+
 	if (!projectDetails)
 	{
 		responseObject.message = "You are not a member of this project";
@@ -353,8 +349,24 @@ exports.invitationAction = asyncHandler(async (req, res) =>
 
 	await Project.findOneAndUpdate(
 		{ _id: project_id, 'members.user': _id },
-		{ 'members.$.status': body.action }
+		{ 'members.$.status': body.action },
+		{ new: true }
 	);
+
+	if (body.action == "JOINED")
+	{
+		await sendProjectNotification({
+			to: project_id,
+			event: "new-notification",
+			payload: {
+				initiator_name: projectDetails.name,
+				message: `${req.user.display_name} has now joined`,
+				is_actionable: false,
+				redirect_url: `/project/${project_id}/members`
+			},
+			initiator: req.user._id
+		});
+	}
 
 	responseObject.message = "Successfully updated your status";
 	return res.success(responseObject);

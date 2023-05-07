@@ -62,6 +62,18 @@ exports.addTasktoProject = asyncHandler(async (req, res) =>
 
 	const record = await Task.create(payload);
 
+	await sendNotificationToUser({
+		to: record.assignee,
+		event: "new-notification",
+		payload: {
+			message: `Assigned you a new task ${record.task_key}`,
+			is_actionable: false,
+			redirect_url: `/project/${project_id}/tasks/${record.task_key}`,
+			initiator_name: req.user.display_name,
+			initiator_profile: req.user.profile_picture
+		}
+	});
+
 	responseObject.message = "Successfully created a new task";
 	return res.success(responseObject);
 });
@@ -85,7 +97,7 @@ exports.updateTaskDetails = asyncHandler(async (req, res) =>
 	let message = "";
 	let userToSendNotification = oldValue.assignee;
 
-	if (oldValue.assignee !== record.assignee)
+	if (oldValue.assignee.toString() !== record.assignee.toString())
 	{
 		userToSendNotification = record.assignee;
 		message = `Assigned you a new task ${task_key}`;
