@@ -46,6 +46,11 @@ const projectSchema = Schema(
 			type: Boolean,
 			default: false,
 		},
+		thumbnail: {
+			type: String,
+			default: "https://source.unsplash.com/random/900%C3%97700/?tech",
+			required: true,
+		},
 		members: [
 			{
 				user: {
