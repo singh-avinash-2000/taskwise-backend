@@ -27,12 +27,10 @@ const taskSchema = Schema(
 			type: String,
 			enum: ["LOW", "MEDIUM", "HIGH", "URGENT"]
 		},
-		assignee: [
-			{
-				type: Schema.Types.ObjectId,
-				ref: "users"
-			}
-		],
+		assignee: {
+			type: Schema.Types.ObjectId,
+			ref: "users"
+		},
 		reporter: {
 			type: Schema.Types.ObjectId,
 			ref: "users"

@@ -270,8 +270,9 @@ exports.updateProjectMemberDetails = asyncHandler(async (req, res) =>
 			initiator_name: updatedProjectDetails.name,
 			message: `${userDetails.display_name} now has ${body.role} access.`,
 			is_actionable: false,
-			redirect_url: `/projects/${project_id}/members`
-		}
+			redirect_url: `/project/${project_id}/members`
+		},
+		initiator: req.user._id
 	});
 
 	responseObject.message = "Successfully updated member's permission";

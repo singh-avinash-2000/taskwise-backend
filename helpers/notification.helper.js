@@ -24,12 +24,15 @@ exports.sendNotificationToUser = async ({ to, event, payload }) =>
 	}
 };
 
-exports.sendProjectNotification = async ({ to, event, payload }) =>
+exports.sendProjectNotification = async ({ to, event, payload, initiator }) =>
 {
 	try
 	{
+		// Broadcast event in a room
 		const Socket = getSocket();
-		Socket.to(to).emit(event, payload);
+		const socketObject = getSocketObject();
+		const initiatorSocket = Socket.sockets.sockets.get(socketObject[initiator]);
+		initiatorSocket.to(to).emit(event, payload);
 
 		await Notification.create({
 			type: "PROJECT",

@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Task = require("@models/task");
 const Counter = require("@models/counter");
+const { sendNotificationToUser } = require("@helpers/notification.helper");
 
 exports.fetchTasksForProject = asyncHandler(async (req, res) =>
 {
@@ -71,11 +72,44 @@ exports.updateTaskDetails = asyncHandler(async (req, res) =>
 	const body = req.body;
 	const responseObject = {};
 
+	const oldValue = await Task.findOne({
+		project: project_id, task_key: task_key
+	});
+
 	const record = await Task.findOneAndUpdate(
 		{ project: project_id, task_key: task_key },
 		body,
 		{ new: true }
 	);
+
+	let message = "";
+	let userToSendNotification = oldValue.assignee;
+
+	if (oldValue.assignee !== record.assignee)
+	{
+		userToSendNotification = record.assignee;
+		message = `Assigned you a new task ${task_key}`;
+	}
+	else if (body.status !== undefined)
+	{
+		message = `Changed ${task_key} to ${body.status}`;
+	}
+	else
+	{
+		message = `Updated ${task_key} task details`;
+	}
+
+	await sendNotificationToUser({
+		to: userToSendNotification,
+		event: "new-notification",
+		payload: {
+			message,
+			is_actionable: false,
+			redirect_url: `/project/${project_id}/tasks/${task_key}`,
+			initiator_name: req.user.display_name,
+			initiator_profile: req.user.profile_picture
+		}
+	});
 
 	responseObject.message = "Successfully update task";
 	responseObject.result = record;
