@@ -41,7 +41,8 @@ exports.fetchProjectListForUser = asyncHandler(async (req, res) =>
 		{
 			"_id": 1,
 			"name": 1,
-			"role": "$members.role"
+			"role": "$members.role",
+			"thumbnail": 1,
 		}
 	);
 
