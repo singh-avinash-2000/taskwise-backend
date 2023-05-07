@@ -48,6 +48,10 @@ const initApp = async (connectDB) =>
 		app.use(express.json({ limit: '10mb' }));
 		app.use(express.urlencoded({ extended: false }));
 
+		app.get("/", (req, res) =>
+		{
+			return res.send("Server is up and running");
+		});
 		app.use(`/api/auth`, require("@routes/auth.routes"));
 		app.use(authenticateRequest);
 		app.use(`/api/projects`, require("@routes/project.routes"));
