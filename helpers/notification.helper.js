@@ -16,7 +16,7 @@ exports.sendNotificationToUser = async ({ to, event, payload }) =>
 		await Notification.create({
 			user: to,
 			type: "USER",
-			payload
+			payload,
 		});
 	} catch (error)
 	{
@@ -34,7 +34,7 @@ exports.sendProjectNotification = async ({ to, event, payload, initiator }) =>
 		await Notification.create({
 			type: "PROJECT",
 			project: to,
-			payload
+			payload,
 		});
 	} catch (error)
 	{

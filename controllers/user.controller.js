@@ -71,9 +71,16 @@ exports.fetchUserNotifications = asyncHandler(async (req, res) =>
 	let responseObject = {};
 
 	const projectIds = Object.keys(req.projects);
-	const notifications = await Notification.find({ $or: [{ user: _id }, { project: { $in: projectIds } }] }).sort({ created_at: -1 });
-	const unReadCount = await Notification.count({ $or: [{ user: _id }, { project: { $in: projectIds } }], is_read: false });
+	let notifications = await Notification.find({ $or: [{ user: _id }, { project: { $in: projectIds } }] }).sort({ created_at: -1 });
+	const unReadCount = await Notification.count({ $or: [{ user: _id }, { project: { $in: projectIds } }], [`is_read.${_id}`]: { $exists: false } });
 
+	notifications = notifications.map(notification =>
+	{
+		return {
+			...notification._doc,
+			is_read: notification.is_read.get(_id) == true ? true : false
+		};
+	});
 	responseObject.message = "Notifications fetched";
 	responseObject.result = {
 		notifications,
@@ -90,7 +97,7 @@ exports.markAllNotificationsRead = asyncHandler(async (req, res) =>
 
 	const projectIds = Object.keys(req.projects);
 
-	await Notification.updateMany({ $or: [{ user: _id }, { project: { $in: projectIds } }], is_read: false }, { is_read: true });
+	await Notification.updateMany({ $or: [{ user: _id }, { project: { $in: projectIds } }], [`is_read.${_id}`]: { $exists: false } }, { $set: { [`is_read.${_id}`]: true } }, { multi: true });
 	responseObject.message = "Successfully marked all notifications as read";
 	return res.success(responseObject);
 });
@@ -125,7 +132,7 @@ exports.markNotificationRead = asyncHandler(async (req, res) =>
 	}
 
 
-	notification.is_read = true;
+	notification.is_read.set(`${_id}`, true);
 	await notification.save();
 
 	responseObject.message = "Successfully marked notification as read";
