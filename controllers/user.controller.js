@@ -88,8 +88,9 @@ exports.markAllNotificationsRead = asyncHandler(async (req, res) =>
 	const { _id } = req.user;
 	let responseObject = {};
 
-	await Notification.updateMany({ user: _id, is_read: false }, { is_read: true });
+	const projectIds = Object.keys(req.projects);
 
+	await Notification.updateMany({ $or: [{ user: _id }, { project: { $in: projectIds } }], is_read: false }, { is_read: true });
 	responseObject.message = "Successfully marked all notifications as read";
 	return res.success(responseObject);
 });

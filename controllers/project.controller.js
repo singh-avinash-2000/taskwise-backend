@@ -264,6 +264,7 @@ exports.updateProjectMemberDetails = asyncHandler(async (req, res) =>
 		event: "new-notification",
 		payload: {
 			initiator_name: updatedProjectDetails.name,
+			initiator_profile: updatedProjectDetails.thumbnail,
 			message: `${userDetails.display_name} now has ${body.role} access.`,
 			is_actionable: false,
 			redirect_url: `/project/${project_id}/members`
@@ -361,6 +362,7 @@ exports.invitationAction = asyncHandler(async (req, res) =>
 			event: "new-notification",
 			payload: {
 				initiator_name: projectDetails.name,
+				initiator_profile: projectDetails.thumbnail,
 				message: `${req.user.display_name} has now joined`,
 				is_actionable: false,
 				redirect_url: `/project/${project_id}/members`
@@ -410,9 +412,7 @@ exports.fetchInvitedProjectDetails = asyncHandler(async (req, res) =>
 	responseObject.message = "Successfully fetched project details";
 
 	projectDetails.members = projectDetails.members.filter(member => member.status !== "PENDING");
-	console.log("first: ", projectDetails.members);
 	projectDetails.members = projectDetails.members.filter(member => member.user.toString() !== _id.toString());
-	console.log("second: ", projectDetails.members);
 	responseObject.result = {
 		name: projectDetails.name,
 		description: projectDetails.description,
