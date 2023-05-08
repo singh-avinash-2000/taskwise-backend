@@ -1,6 +1,7 @@
 const JWT = require("@configs/jwt");
+const User = require("@models/user");
 
-const authenticateRequest = (req, res, next) =>
+const authenticateRequest = async (req, res, next) =>
 {
 	const result = JWT.validateRequestHeader(req.headers.authorization);
 
@@ -9,7 +10,8 @@ const authenticateRequest = (req, res, next) =>
 		return res.error({ message: "Failed to authenticate", code: 401 });
 	}
 
-	req.user = result.user;
+	const userInfo = await User.findById(result.user._id);
+	req.user = userInfo;
 	next();
 };
 

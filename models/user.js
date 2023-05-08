@@ -30,7 +30,8 @@ const userSchema = Schema(
 			type: String,
 			required: [true, "Email is required"],
 			trim: true,
-			unique: true
+			unique: true,
+			index: true
 		},
 		profile_picture:
 		{
