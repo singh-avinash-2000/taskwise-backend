@@ -22,7 +22,7 @@ const projectSchema = Schema(
 			{
 				if (this.isNew)
 				{
-					let key = value[0] + pickRandomLetters(value.substr(1)).toUpperCase();
+					let key = value[0].toUpperCase() + pickRandomLetters(value.substr(1)).toUpperCase();
 					this.key = key;
 				}
 
