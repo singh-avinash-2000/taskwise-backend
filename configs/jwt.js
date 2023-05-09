@@ -10,13 +10,8 @@ const generate = (payload, time) =>
 
 const validate = (token) =>
 {
-	try
-	{
-		return JWT.verify(token, process.env.JWT_SECRET) || false;
-	} catch (error)
-	{
-		throw error;
-	}
+	return JWT.verify(token, process.env.JWT_SECRET);
+
 };
 
 const validateRequestHeader = (authHeader) =>

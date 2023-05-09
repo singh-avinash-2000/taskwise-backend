@@ -43,14 +43,14 @@ exports.addTasktoProject = asyncHandler(async (req, res) =>
 		{ new: true, upsert: true }
 	);
 
-	if (body.type == "SUB_TASK")
-	{
-		const parentTaskDetails = await Task.findOne({
-			key: body.parent_task_key
-		});
+	// if (body.type == "SUB_TASK")
+	// {
+	// 	const parentTaskDetails = await Task.findOne({
+	// 		key: body.parent_task_key
+	// 	});
 
-		body.parent_task_id = parentTaskDetails._id;
-	}
+	// 	body.parent_task = parentTaskDetails._id;
+	// }
 
 	body.task_key = key + "-" + counter.count;
 	body.reporter = _id;
@@ -131,9 +131,8 @@ exports.updateTaskDetails = asyncHandler(async (req, res) =>
 
 exports.fetchSubTasksForTask = asyncHandler(async (req, res) =>
 {
-	const { project_id, task_key } = req.params;
+	let { project_id, task_key } = req.params;
 	const responseObject = {};
-
 	if (!project_id || !task_key)
 	{
 		responseObject.code = 400;
@@ -142,7 +141,12 @@ exports.fetchSubTasksForTask = asyncHandler(async (req, res) =>
 		return res.error(responseObject);
 	}
 
-	const record = await Task.find({ type: 'SUB_TASK', project: project_id, parent_task: task_key });
+	task_key = task_key.split("-")[0];
+	const record = await Task.find({
+		project: project_id,
+		type: "SUB_TASK",
+		task_key: { $regex: task_key, $options: "i" }
+	});
 
 	if (!record)
 	{

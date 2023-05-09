@@ -116,8 +116,7 @@ exports.markNotificationRead = asyncHandler(async (req, res) =>
 		responseObject.code = 404;
 		return res.error(responseObject);
 	}
-
-	if (notification.type === "USER" && notification.user.toString() !== _id)
+	if (notification.type === "USER" && notification.user.toString() !== _id.toString())
 	{
 		responseObject.message = "You are not authorized to mark this notification as read";
 		responseObject.code = 403;
