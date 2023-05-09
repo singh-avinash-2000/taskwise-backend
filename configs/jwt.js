@@ -10,7 +10,13 @@ const generate = (payload, time) =>
 
 const validate = (token) =>
 {
-	return JWT.verify(token, process.env.JWT_SECRET);
+	try
+	{
+		return JWT.verify(token, process.env.JWT_SECRET);
+	} catch (error)
+	{
+		throw error;
+	}
 
 };
 
@@ -28,7 +34,13 @@ const validateRequestHeader = (authHeader) =>
 		return undefined;
 	}
 
-	return validate(authTokenList[1]);
+	try
+	{
+		return validate(authTokenList[1]);
+	} catch (error)
+	{
+		throw error;
+	}
 };
 
 module.exports = {

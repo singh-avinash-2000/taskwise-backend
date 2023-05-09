@@ -1,7 +1,8 @@
 const JWT = require("@configs/jwt");
 const User = require("@models/user");
+const expressAsyncHandler = require("express-async-handler");
 
-const authenticateRequest = async (req, res, next) =>
+const authenticateRequest = expressAsyncHandler(async (req, res, next) =>
 {
 	const result = JWT.validateRequestHeader(req.headers.authorization);
 
@@ -13,7 +14,7 @@ const authenticateRequest = async (req, res, next) =>
 	const userInfo = await User.findById(result.user._id);
 	req.user = userInfo;
 	next();
-};
+});
 
 module.exports =
 {
