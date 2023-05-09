@@ -43,6 +43,8 @@ exports.addTasktoProject = asyncHandler(async (req, res) =>
 		{ new: true, upsert: true }
 	);
 
+
+
 	// if (body.type == "SUB_TASK")
 	// {
 	// 	const parentTaskDetails = await Task.findOne({
