@@ -26,6 +26,6 @@ router.route(`/:project_id/tasks`).get(attachProjectData, hasProjectAccess, fetc
 router.route(`/:project_id/tasks`).post(attachProjectData, hasProjectAccess, addTasktoProject);
 router.route(`/:project_id/tasks/:task_key`).get(attachProjectData, hasProjectAccess, fetchTaskDetails);
 router.route(`/:project_id/tasks/:task_key`).patch(attachProjectData, hasProjectAccess, hasPermission(["ADMIN", "OWNER"]), updateTaskDetails);
-router.route(`/:project_id/tasks/:task_key/subtasks`).get(attachProjectData, hasProjectAccess, fetchSubTasksForTask);
+router.route(`/:project_id/tasks/:parent_task/subtasks`).get(attachProjectData, hasProjectAccess, fetchSubTasksForTask);
 
 module.exports = router;

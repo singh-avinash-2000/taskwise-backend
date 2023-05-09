@@ -131,9 +131,9 @@ exports.updateTaskDetails = asyncHandler(async (req, res) =>
 
 exports.fetchSubTasksForTask = asyncHandler(async (req, res) =>
 {
-	let { project_id, task_key } = req.params;
+	let { project_id, parent_task } = req.params;
 	const responseObject = {};
-	if (!project_id || !task_key)
+	if (!project_id || !parent_task)
 	{
 		responseObject.code = 400;
 		responseObject.message = "Bad Request";
@@ -141,11 +141,10 @@ exports.fetchSubTasksForTask = asyncHandler(async (req, res) =>
 		return res.error(responseObject);
 	}
 
-	task_key = task_key.split("-")[0];
 	const record = await Task.find({
 		project: project_id,
 		type: "SUB_TASK",
-		task_key: { $regex: task_key, $options: "i" }
+		parent_task: parent_task
 	});
 
 	if (!record)
