@@ -491,6 +491,7 @@ exports.sendChatMessage = asyncHandler(async (req, res) =>
 				type: type,
 				message,
 				project: project_id,
+				project_name: req.projects[project_id].name,
 				sent_at: sent_at,
 				sender: {
 					_id: _id,
@@ -513,6 +514,7 @@ exports.sendChatMessage = asyncHandler(async (req, res) =>
 				document: attachments,
 				sent_at: sent_at,
 				project: project_id,
+				project_name: req.projects[project_id].name,
 				sender: {
 					_id: _id,
 					display_name: req.user.display_name,
