@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const multerS3 = require("multer-s3");
-const { uploadAll, deleteFile, getFile } = require("@controllers/misc.controller");
+const { uploadAll, deleteFile, getFile, uploadAllChat } = require("@controllers/misc.controller");
 
 const upload = multer({
 	storage: multerS3({
@@ -16,7 +16,9 @@ const upload = multer({
 	})
 });
 
+
 router.route(`/upload-all`).post(upload.array("files"), uploadAll);
+router.route(`/upload-all-chat`).post(upload.array("files"), uploadAllChat);
 router.route(`/delete/:filename`).delete(upload.single("files"), deleteFile);
 router.route(`/download/:filename`).get(getFile);
 

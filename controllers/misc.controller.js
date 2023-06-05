@@ -7,12 +7,31 @@ exports.uploadAll = asyncHandler(async (req, res) =>
 {
 	let responseObject = {};
 	const files = req.files;
+	console.log("filll: ", files);
 	responseObject.message = "Successfully uploaded all";
 	responseObject.code = 201;
 	responseObject.result = {
 		filename: files[0].originalname,
 		url: files[0].location,
 	};
+	return res.success(responseObject);
+});
+
+exports.uploadAllChat = asyncHandler(async (req, res) =>
+{
+	let responseObject = {};
+	const files = req.files;
+	// console.log("filll: ", files);
+	responseObject.message = "Successfully uploaded all";
+	responseObject.code = 201;
+	responseObject.result = [];
+	for (let i = 0; i < files.length; i++)
+	{
+		responseObject.result.push({
+			name: files[i].originalname,
+			url: files[i].location,
+		});
+	}
 	return res.success(responseObject);
 });
 

@@ -2,8 +2,9 @@ const asyncHandler = require("express-async-handler");
 const Project = require("@models/project");
 const User = require("@models/user");
 const { sendNotificationToUser } = require("@helpers/notification.helper");
-const { getSocket, getSocketObject, getUserSocketInstance } = require("../configs/socket");
+const { sendChatMessageHelper } = require("@helpers/chat.helper");
 const { sendProjectNotification } = require("../helpers/notification.helper");
+const Chat = require("@models/chat");
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
@@ -428,5 +429,103 @@ exports.fetchInvitedProjectDetails = asyncHandler(async (req, res) =>
 		}))
 	};
 
+	return res.success(responseObject);
+});
+
+exports.fetchChatsForProject = asyncHandler(async (req, res) =>
+{
+	let responseObject = {};
+	const { project_id } = req.params;
+	const limit = req.query.limit || 10;
+	const skip = req.query.skip || 0;
+
+	if (!project_id)
+	{
+		responseObject.message = "Please provide a project id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+	const { _id } = req.user;
+	if (!_id)
+	{
+		responseObject.message = "Please provide a user id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	const messages = await Chat.getProjectMessages(project_id, parseInt(limit), parseInt(skip));
+
+	responseObject.message = "Successfully fetched messages";
+	responseObject.result = messages;
+	responseObject.code = 200;
+	return res.success(responseObject);
+});
+
+exports.sendChatMessage = asyncHandler(async (req, res) =>
+{
+	let responseObject = {};
+	const { project_id } = req.params;
+
+	if (!project_id)
+	{
+		responseObject.message = "Please provide a project id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+	const { _id } = req.user;
+	if (!_id)
+	{
+		responseObject.message = "Please provide a user id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	const { message, type, attachments, sent_at } = req.body;
+	let DBresponse = {};
+	if (type === 'TEXT')
+	{
+		DBresponse = await sendChatMessageHelper({
+			to: project_id,
+			event: 'chat-message',
+			payload: {
+				type: type,
+				message,
+				project: project_id,
+				sent_at: sent_at,
+				sender: {
+					_id: _id,
+					display_name: req.user.display_name,
+					profile_picture: req.user.profile_picture,
+					email: req.user.email,
+				}
+			},
+			initiator: _id,
+			type: type
+		});
+	}
+	else
+	{
+		DBresponse = await sendChatMessageHelper({
+			to: project_id,
+			event: 'chat-message',
+			payload: {
+				type: type,
+				document: attachments,
+				sent_at: sent_at,
+				project: project_id,
+				sender: {
+					_id: _id,
+					display_name: req.user.display_name,
+					profile_picture: req.user.profile_picture,
+					email: req.user.email,
+				}
+			},
+			initiator: _id,
+			type: type
+		});
+	}
+	responseObject.message = "Successfully sent message";
+	responseObject.code = 200;
+	responseObject.result = DBresponse;
 	return res.success(responseObject);
 });
