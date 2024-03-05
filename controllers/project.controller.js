@@ -6,6 +6,8 @@ const { sendChatMessageHelper } = require("@helpers/chat.helper");
 const { sendProjectNotification } = require("../helpers/notification.helper");
 const Chat = require("@models/chat");
 const nodemailer = require("nodemailer");
+// const { createCollabSession, joinCollabSession } = require("../helpers/collab.helper");
+const { createCollabSession, joinCollabSession, leaveCollabSession } = require("../configs/socket");
 
 const transporter = nodemailer.createTransport({
 	service: "gmail",
@@ -141,13 +143,30 @@ exports.fetchProjectMembers = asyncHandler(async (req, res) =>
 {
 	const { _id } = req.user;
 	const { project_id } = req.params;
+
+	const { searchQuery } = req.query;
 	const responseObject = {};
 
-	const record = await Project.findOne({
-		_id: project_id,
-		"members.user": _id
-	}).populate({ path: "members.user", select: { "_id": 1, "first_name": 1, "last_name": 1, "display_name": 1, "profile_picture": 1 } });
-
+	let record = {};
+	if (!searchQuery)
+	{
+		record = await Project.findOne({
+			_id: project_id,
+			"members.user": _id
+		}).populate({ path: "members.user", select: { "_id": 1, "first_name": 1, "last_name": 1, "display_name": 1, "profile_picture": 1 } });
+	}
+	else
+	{
+		const regex = new RegExp(searchQuery, 'i');
+		record = await Project.findOne({
+			_id: project_id,
+			"members.user": _id
+		}).populate({
+			path: "members.user",
+			match: { display_name: { $regex: regex } },
+			select: { "_id": 1, "first_name": 1, "last_name": 1, "display_name": 1, "profile_picture": 1 }
+		});
+	}
 
 	responseObject.message = "Successfully fetched member details";
 	responseObject.result = record.members;
@@ -530,4 +549,138 @@ exports.sendChatMessage = asyncHandler(async (req, res) =>
 	responseObject.code = 200;
 	responseObject.result = DBresponse;
 	return res.success(responseObject);
+});
+
+exports.createOrJoinCollabSession = asyncHandler(async (req, res) =>
+{
+
+	const { collabId } = req.query;
+	const responseObject = {};
+	const { project_id } = req.params;
+	if (!project_id)
+	{
+		responseObject.message = "Please provide a project id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	const { _id } = req.user;
+	if (!_id)
+	{
+		responseObject.message = "Please provide a user id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	if (collabId)
+	{
+		//  Join an existing collab session
+		const response = await joinCollabSession(collabId, req.user);
+		if (response.success)
+		{
+			// response.user = req.user;
+			// //remove encrypted password from user object
+			// delete response.user.encrypted_password;
+			response.user = {
+				userId: req.user._id,
+				display_name: req.user.display_name,
+				profile_picture: req.user.profile_picture
+			};
+			responseObject.result = response;
+			responseObject.code = 200;
+			return res.success(responseObject);
+		}
+		else
+		{
+			responseObject.message = response.message;
+			responseObject.code = 400;
+			return res.error(responseObject);
+		}
+	}
+	else
+	{
+
+		const response = await createCollabSession(req.user);
+		response.user = {
+			userId: req.user._id,
+			display_name: req.user.display_name,
+			profile_picture: req.user.profile_picture
+		};
+
+		responseObject.message = "Collab Session created successfully";
+		responseObject.result = response;
+		responseObject.code = 201;
+		return res.success(responseObject);
+	}
+});
+
+exports.leaveCollabSession = asyncHandler(async (req, res) =>
+{
+	const { collabId } = req.params;
+	const responseObject = {};
+	const { _id } = req.user;
+	if (!collabId)
+	{
+		responseObject.message = "Please provide a collab session id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	const response = await leaveCollabSession(collabId, req.user);
+	if (response.success)
+	{
+		responseObject.message = "Collab Session left successfully";
+		responseObject.result = response;
+		responseObject.code = 200;
+		return res.success(responseObject);
+	}
+	else
+	{
+		responseObject.message = response.message;
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+});
+
+exports.inviteToCollab = asyncHandler(async (req, res) =>
+{
+	let responseObject = {};
+	const { collabId, project_id } = req.params;
+
+	const { usersToInvite } = req.body;
+	const { _id } = req.user;
+	if (!collabId)
+	{
+		responseObject.message = "Please provide a collab session id";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+	if (!usersToInvite)
+	{
+		responseObject.message = "Please provide a list of users to invite";
+		responseObject.code = 400;
+		return res.error(responseObject);
+	}
+
+	usersToInvite.forEach(async user =>
+	{
+		sendNotificationToUser({
+			to: user._id,
+			event: "new-notification",
+			payload: {
+				message: "You are invited to collab session",
+				is_actionable: true,
+				action_title: req.projects[project_id].name + " - Collab Session" || "Collab Session Invitation",
+				redirect_url: `/project/${project_id}/collab/${collabId}`,
+				initiator_name: req.user.display_name,
+				initiator_profile: req.user.profile_picture
+			}
+		});
+	});
+
+	responseObject.message = "Successfully sent invites";
+	responseObject.code = 200;
+	return res.success(responseObject);
+
 });

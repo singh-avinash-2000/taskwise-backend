@@ -13,6 +13,8 @@ exports.sendNotificationToUser = async ({ to, event, payload }) =>
 			Socket.to(socketObject[to]).emit(event, payload);
 		}
 
+
+		//DB_HIT
 		await Notification.create({
 			user: to,
 			type: "USER",
@@ -31,6 +33,7 @@ exports.sendProjectNotification = async ({ to, event, payload, initiator }) =>
 		const initiatorSocket = getUserSocketInstance(initiator);
 		initiatorSocket.to(to).emit(event, payload);
 
+		//DB_HIT
 		await Notification.create({
 			type: "PROJECT",
 			project: to,

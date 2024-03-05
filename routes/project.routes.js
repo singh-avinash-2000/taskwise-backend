@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { hasPermission, hasProjectAccess, attachProjectData } = require("@middlewares/authorization.middleware");
-const { fetchProjectListForUser, createNewProject, fetchProjectDetails, updateProjectDetails, deleteProject, fetchProjectMembers, addMemberToProject, removeMemberFromProject, updateProjectMemberDetails, fetchSearchedProjects, invitationAction, fetchInvitedProjectDetails, fetchChatsForProject, sendChatMessage } = require("@controllers/project.controller");
+const { fetchProjectListForUser, createNewProject, fetchProjectDetails, updateProjectDetails, deleteProject, fetchProjectMembers, addMemberToProject, removeMemberFromProject, updateProjectMemberDetails, fetchSearchedProjects, invitationAction, fetchInvitedProjectDetails, fetchChatsForProject, sendChatMessage, createOrJoinCollabSession, leaveCollabSession, inviteToCollab } = require("@controllers/project.controller");
 const { fetchTasksForProject, fetchTaskDetails, addTasktoProject, updateTaskDetails, fetchSubTasksForTask } = require("@controllers/task.controller");
 
 // PROJECTS
@@ -14,6 +14,9 @@ router.route(`/:project_id`).patch(attachProjectData, hasProjectAccess, hasPermi
 router.route(`/:project_id`).delete(attachProjectData, hasProjectAccess, hasPermission(["OWNER"]), deleteProject);
 router.route(`/:project_id/chat`).get(attachProjectData, hasProjectAccess, fetchChatsForProject);
 router.route(`/:project_id/chat`).post(attachProjectData, hasProjectAccess, sendChatMessage);
+router.route(`/:project_id/collab`).get(attachProjectData, hasProjectAccess, createOrJoinCollabSession);
+router.route(`/:project_id/collab/:collabId`).post(attachProjectData, hasProjectAccess, inviteToCollab);
+router.route(`/:project_id/collab/:collabId`).delete(attachProjectData, hasProjectAccess, leaveCollabSession);
 
 // MEMBERS
 router.route(`/:project_id/members`).get(attachProjectData, hasProjectAccess, fetchProjectMembers);
